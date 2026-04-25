@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial; font-size: 12px; }
+        .left { width: 30%; float: left; background: #f2f2f2; padding: 10px; }
+        .right { width: 65%; float: right; padding: 10px; }
+        h2 { border-bottom: 1px solid black; }
+    </style>
+</head>
+
+<body>
+
+<div class="left">
+    <h1>{{ resume.full_name }}</h1>
+    <p>{{ resume.phone }}</p>
+    <p>{{ resume.email }}</p>
+
+    <h2>Summary</h2>
+    <p>{{ resume.summary }}</p>
+
+    <h2>Skills</h2>
+    <ul>
+        {% for skill in resume.skills.all %}
+            <li>{{ skill.name }}</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<div class="right">
+
+    <h2>Education</h2>
+    {% for edu in resume.educations.all %}
+        <p>{{ edu.degree }} - {{ edu.college }} ({{ edu.year }})</p>
+    {% endfor %}
+
+    <h2>Experience</h2>
+    {% for exp in resume.experiences.all %}
+        <p><b>{{ exp.job_title }}</b> - {{ exp.company }}</p>
+        <p>{{ exp.duration }}</p>
+        <p>{{ exp.description }}</p>
+    {% endfor %}
+
+    <h2>Projects</h2>
+    {% for proj in resume.projects.all %}
+        <p>{{ proj.name }} - {{ proj.tech_stack }}</p>
+    {% endfor %}
+
+</div>
+
+</body>
+</html>

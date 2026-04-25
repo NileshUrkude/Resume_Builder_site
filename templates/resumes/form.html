@@ -1,0 +1,130 @@
+<h2>Create Resume</h2>
+
+<form method="post">
+    {% csrf_token %}
+
+    <!-- main resume form -->
+    {{ form.as_p }}
+
+    <!-- EDUCATION -->
+    <h3>Education</h3>
+    {{ edu_formset.management_form }}
+    <div id="edu-container">
+        {% for form in edu_formset %}
+            <div class="edu-form">
+                {{ form.as_p }}
+
+                <!-- remove button -->
+                <button type="button" onclick="removeForm(this)">
+                    Remove
+                </button>
+            </div>
+        {% endfor %}
+    </div>
+    <button type="button"
+        onclick="addForm('edu-container','id_edu-TOTAL_FORMS')">
+        Add Education
+    </button>
+
+
+    <!-- EXPERIENCE -->
+    <h3>Experience</h3>
+    {{ exp_formset.management_form }}
+    <div id="exp-container">
+        {% for form in exp_formset %}
+            <div class="exp-form">
+                {{ form.as_p }}
+
+                <!-- remove button -->
+                <button type="button" onclick="removeForm(this)">
+                    Remove
+                </button>
+            </div>
+        {% endfor %}
+    </div>
+    <button type="button"
+        onclick="addForm('exp-container','id_exp-TOTAL_FORMS')">
+        Add Experience
+    </button>
+
+
+    <!-- PROJECT -->
+    <h3>Projects</h3>
+    {{ proj_formset.management_form }}
+
+    <div id="proj-container">
+        {% for form in proj_formset %}
+            <div class="proj-form">
+                {{ form.as_p }}
+                <!-- remove button -->
+                <button type="button" onclick="removeForm(this)">
+                    Remove
+                </button>
+            </div>
+        {% endfor %}
+    </div>
+    <button type="button"
+        onclick="addForm('proj-container','id_proj-TOTAL_FORMS')">
+        Add Project
+    </button>
+
+
+    <!-- SKILLS -->
+    <h3>Skills</h3>
+    <!-- user enters comma separated skills -->
+    <input type="text" name="skills" placeholder="Python, Django, SQL">
+
+    <br><br>
+    <button type="submit">Save</button>
+</form>
+
+
+<script>
+// function to add new form dynamically
+function addForm(containerId, totalFormsId) {
+
+    // get total forms count
+    let totalForms = document.getElementById(totalFormsId);
+    let count = parseInt(totalForms.value);
+
+    // get container
+    let container = document.getElementById(containerId);
+
+    // clone first form
+    let firstForm = container.children[0];
+    let newForm = firstForm.cloneNode(true);
+
+    // update input fields
+    let inputs = newForm.querySelectorAll("input, textarea");
+
+    inputs.forEach(function(input) {
+
+        // clear old value
+        input.value = "";
+
+        input.name = input.name.replace(/-\d+-/, '-' + count + '-');
+        input.id = input.id.replace(/-\d+-/, '-' + count + '-');
+    });
+
+    // add new form to container
+    container.appendChild(newForm);
+
+    // increase total form count
+    totalForms.value = count + 1;
+}
+
+function removeForm(button) {
+    let formDiv = button.parentElement;
+    let container = formDiv.parentElement;
+
+    if (container.children.length > 1) {
+        formDiv.remove();
+
+        // update total forms
+        let totalFormsInput = container.parentElement.querySelector('input[name$="TOTAL_FORMS"]');
+        totalFormsInput.value = container.children.length;
+    }
+}
+
+</script>
+</script>

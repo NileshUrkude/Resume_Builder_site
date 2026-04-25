@@ -1,0 +1,19 @@
+<h2>Sign Up</h2>
+
+<form method="post">
+    {% csrf_token %}
+
+    <label>Username</label><br>
+    {{ form.username }}<br><br>
+
+    <label>Password</label><br>
+    {{ form.password }}<br><br>
+
+    <label>Confirm Password</label><br>
+    {{ form.confirm_password }}<br><br>
+
+    <button type="submit">Register</button>
+</form>
+
+<p>Already have account?</p>
+<a href="/accounts/login/">Login</a>

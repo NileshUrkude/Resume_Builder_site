@@ -1,0 +1,15 @@
+<h2>Dashboard</h2>
+
+<a href="/logout/">Logout</a>
+
+{% if resume %}
+    <p>Your resume exists</p>
+
+    <a href="/create/">Edit Resume</a><br>
+    <a href="{% url 'view_resume' %}">View Resume</a><br>
+    <a href="{% url 'download_pdf' %}">Download PDF</a>     
+
+{% else %}
+    <p>No resume found</p>
+    <a href="/create/">Create Resume</a>
+{% endif %}
