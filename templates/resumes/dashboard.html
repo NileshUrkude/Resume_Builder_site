@@ -1,23 +1,49 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<div class="card p-4 shadow">
-<h3>Dashboard</h3>
+<div class="text-center mb-4">
+    <h2>Welcome, {{ request.user.username }}</h2>
+    <p class="text-muted">Build and manage your resume easily</p>
+</div>
 
-{% if resume %}
-    <p>Your resume is ready</p>
+<div class="row ">
 
-    <a href="{% url 'create_resume' %}?next=dashboard" class="btn btn-primary">Edit Resume</a>
-    <hr>
+    <!-- LEFT: ACTION PANEL -->
+    <div class="col-md-4">
 
-    <a href="/view/t1/" class="btn btn-dark">Template 1</a>
-    <a href="/view/t2/" class="btn btn-dark">Template 2</a>
-    <a href="/view/t3/" class="btn btn-dark">Template 3</a>
+        <div class="card p-3 shadow-sm mb-3">
+            <h5>Quick Actions</h5>
 
-{% else %}
-    <p>No resume found</p>
-    <a href="/create/" class="btn btn-primary">Create Resume</a>
-{% endif %}
+            <a href="{% url 'create_resume' %}?next=dashboard"
+               class="btn btn-warning w-100 mb-2">
+                Edit Resume
+            </a>
+
+            <a href="{% url 'download_pdf' 't1' %}"
+               class="btn btn-success w-100">
+                Download Resume
+            </a>
+        </div>
+
+        <div class="card p-3 shadow-sm">
+            <h6>Templates</h6>
+
+            <a href="{% url 'view_resume' 't1' %}" class="btn btn-outline-primary w-100 mb-2">
+                View Template 1
+            </a>
+
+            <a href="{% url 'view_resume' 't2' %}" class="btn btn-outline-primary w-100 mb-2">
+                View Template 2
+            </a>
+
+            <a href="{% url 'view_resume' 't3' %}" class="btn btn-outline-primary w-100">
+                View Template 3
+            </a>
+        </div>
+
+    </div>
+
+    </div>
 
 </div>
 

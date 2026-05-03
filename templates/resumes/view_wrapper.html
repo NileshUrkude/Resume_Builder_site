@@ -1,18 +1,63 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<div class="card p-4 shadow">
-
-<div class="d-flex justify-content-between mb-3">
-    <a href="/dashboard/" class="btn btn-secondary">Back</a>
-
-    <div>
-        <a href="{% url 'create_resume' %}?next={{ selected_template }}" class="btn btn-warning">Edit</a>
-        <a href="/download/{{ selected_template }}/" class="btn btn-dark">Download</a>
-    </div>
+<div class="row">
+<div class="text-center mb-4">
+    <h2>Welcome, {{ request.user.username }}</h2>
+    <p class="text-muted">Build and manage your resume easily</p>
 </div>
+    <!-- LEFT: ACTION PANEL -->
+    <div class="col-md-4">
 
-{% include template_name %}
+        <div class="card p-3 shadow-sm mb-3">
+            <h5>Actions</h5>
+
+            <a href="{% url 'create_resume' %}?next={{ selected_template }}"
+               class="btn btn-warning w-100 mb-2">
+                Edit Resume
+            </a>
+
+            <a href="{% url 'download_pdf' selected_template %}"
+               class="btn btn-success w-100">
+                Download PDF
+            </a>
+        </div>
+
+        <div class="card p-3 shadow-sm">
+            <h6>Templates</h6>
+
+            <a href="{% url 'view_resume' 't1' %}"
+               class="btn btn-outline-primary w-100 mb-2">
+                Template 1
+            </a>
+
+            <a href="{% url 'view_resume' 't2' %}"
+               class="btn btn-outline-primary w-100 mb-2">
+                Template 2
+            </a>
+
+            <a href="{% url 'view_resume' 't3' %}"
+               class="btn btn-outline-primary w-100">
+                Template 3
+            </a>
+        </div>
+
+    </div>
+
+    <!-- RIGHT: PREVIEW -->
+    <div class="col-md-8">
+
+        <div class="card p-3 shadow-sm">
+
+            <h5 class="mb-3">
+                Preview ({{ selected_template|upper }})
+            </h5>
+
+            {% include template_name %}
+
+        </div>
+
+    </div>
 
 </div>
 

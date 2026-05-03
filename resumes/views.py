@@ -7,6 +7,11 @@ from django.template.loader import get_template
 from xhtml2pdf import pisa
 from .models import Resume, Education ,Experience, Project, Skill
 from .forms import ResumeForm, EducationFormSet, ExperienceFormSet, ProjectFormSet
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+
+from .models import Resume, Education, Experience, Project, Skill
+from .forms import ResumeForm, EducationFormSet, ExperienceFormSet, ProjectFormSet
 
 
 # home page
@@ -51,12 +56,6 @@ def dashboard(request):
 
 
 # create + update resume (same view)
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-
-from .models import Resume, Education, Experience, Project, Skill
-from .forms import ResumeForm, EducationFormSet, ExperienceFormSet, ProjectFormSet
-
 
 @login_required
 def create_resume(request):
@@ -157,20 +156,15 @@ def view_resume(request, template):
 
     resume = Resume.objects.filter(user=request.user).first()
 
-    if not resume:
-        return redirect('dashboard')
-
     template_map = {
         't1': 'resumes/t1.html',
         't2': 'resumes/t2.html',
-        't3': 'resumes/t3.html'
+        't3': 'resumes/t3.html',
     }
-
-    template_name = template_map.get(template, 'resumes/t1.html')
 
     return render(request, 'resumes/view_wrapper.html', {
         'resume': resume,
-        'template_name': template_name,
+        'template_name': template_map.get(template),
         'selected_template': template
     })
 

@@ -2,34 +2,97 @@
 <html>
 <head>
     <title>Resume Builder</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
+<body>
 
-<body style="background:#f5f6fa;">
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
 
-<nav class="navbar navbar-dark bg-dark px-4">
-    <a class="navbar-brand" href="/dashboard/">Resume Builder</a>
+        <a class="navbar-brand" href="{% url 'dashboard' %}">ResumeBuilder</a>
 
-    {% if user.is_authenticated %}
-    <div>
-        <a href="/view/t1/" class="btn btn-outline-light">T1</a>
-        <a href="/view/t2/" class="btn btn-outline-light">T2</a>
-        <a href="/view/t3/" class="btn btn-outline-light">T3</a>
+        <div class="collapse navbar-collapse">
+
+            {% if user.is_authenticated %}
+
+            <ul class="navbar-nav me-auto">
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'view_resume' 't1' %}">Template 1</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'view_resume' 't2' %}">Template 2</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'view_resume' 't3' %}">Template 3</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link text-warning" href="{% url 'create_resume' %}?next=dashboard">
+                        Edit Resume
+                    </a>
+                </li>
+
+            </ul>
+
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link text-danger" href="{% url 'logout' %}">Logout</a>
+                </li>
+            </ul>
+
+            {% else %}
+
+            <ul class="navbar-nav ms-auto">
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'login' %}">Login</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'signup' %}">Signup</a>
+                </li>
+
+            </ul>
+
+            {% endif %}
+
+        </div>
+
     </div>
-
-    <div class="ms-auto">
-        <a href="/dashboard/" class="btn btn-light">Dashboard</a>
-        <a href="{% url 'create_resume' %}?next={{ selected_template }}" class="btn btn-warning">Edit</a>
-        <a href="/logout/" class="btn btn-danger">Logout</a>
-    </div>
-    {% endif %}
 </nav>
 
 <div class="container mt-4">
-    {% block content %}{% endblock %}
+    {% block content %}
+    {% endblock %}
 </div>
+
+<hr>
+
+<footer class="bg-dark text-white text-center p-3 mt-5">
+
+    <p class="mb-1">
+        © 2026 Resume Builder
+    </p>
+
+    <p class="mb-1">
+        Built by Nilesh Urkude
+    </p>
+    
+    <p class="mb-0">
+        Email: nileshburkude@gmail.com   <br>
+        GitHub:<a href="https://github.com/UrkudeNilesh" target="_blank">UrkudeNilesh</a><br>
+        LinkedIn: <a href="https://www.linkedin.com/in/nilesh-urkude-8ab403210/" target="_blank">Nilesh Urkude</a> <br>
+    </p>
+
+</footer>
 
 </body>
 </html>
