@@ -1,15 +1,24 @@
-<h2>Dashboard</h2>
+{% extends 'base.html' %}
+{% block content %}
 
-<a href="/logout/">Logout</a>
+<div class="card p-4 shadow">
+<h3>Dashboard</h3>
 
 {% if resume %}
-    <p>Your resume exists</p>
+    <p>Your resume is ready</p>
 
-    <a href="/create/">Edit Resume</a><br>
-    <a href="{% url 'view_resume' %}">View Resume</a><br>
-    <a href="{% url 'download_pdf' %}">Download PDF</a>     
+    <a href="{% url 'create_resume' %}?next=dashboard" class="btn btn-primary">Edit Resume</a>
+    <hr>
+
+    <a href="/view/t1/" class="btn btn-dark">Template 1</a>
+    <a href="/view/t2/" class="btn btn-dark">Template 2</a>
+    <a href="/view/t3/" class="btn btn-dark">Template 3</a>
 
 {% else %}
     <p>No resume found</p>
-    <a href="/create/">Create Resume</a>
+    <a href="/create/" class="btn btn-primary">Create Resume</a>
 {% endif %}
+
+</div>
+
+{% endblock %}

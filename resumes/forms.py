@@ -10,6 +10,8 @@ class ResumeForm(forms.ModelForm):
         # fields in form
         fields = ['title', 'full_name', 'email', 'phone', 'summary']
 
+        
+
 # formset for multiple education entries,this allows user to add many education rows
 EducationFormSet = modelformset_factory(
     Education,
@@ -27,6 +29,7 @@ ProjectFormSet = modelformset_factory(
     Project,
     fields=('name', 'description', 'tech_stack'),
     extra=1,
+    can_delete=False
 )
 
 # simple signup form

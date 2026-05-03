@@ -1,130 +1,140 @@
-<h2>Create Resume</h2>
+{% extends 'base.html' %}
+{% block content %}
+
+<a href="/dashboard/" class="btn btn-secondary mb-3">← Back</a>
+
+<div class="card p-4 shadow">
+
+<h3>Create / Edit Resume</h3>
 
 <form method="post">
-    {% csrf_token %}
+{% csrf_token %}
+<input type="hidden" name="next" value="{{ request.GET.next }}">
+<!-- ================= BASIC ================= -->
+<h5>Basic Information</h5>
+{{ form.as_p }}
 
-    <!-- main resume form -->
-    {{ form.as_p }}
+<!-- ================= EDUCATION ================= -->
+<h5 class="mt-4">Education</h5>
 
-    <!-- EDUCATION -->
-    <h3>Education</h3>
-    {{ edu_formset.management_form }}
-    <div id="edu-container">
-        {% for form in edu_formset %}
-            <div class="edu-form">
-                {{ form.as_p }}
+{{ edu.management_form }}
 
-                <!-- remove button -->
-                <button type="button" onclick="removeForm(this)">
-                    Remove
-                </button>
-            </div>
-        {% endfor %}
+<div id="edu-container">
+    {% for f in edu %}
+    <div class="edu-form border p-3 mb-2 rounded bg-light">
+        {{ f.as_p }}
+        <button type="button" class="btn btn-danger btn-sm" onclick="removeForm(this, 'edu')">Remove</button>
     </div>
-    <button type="button"
-        onclick="addForm('edu-container','id_edu-TOTAL_FORMS')">
-        Add Education
-    </button>
+    {% endfor %}
+</div>
 
+<button type="button" class="btn btn-primary mb-3" onclick="addForm('edu')">
+    + Add Education
+</button>
 
-    <!-- EXPERIENCE -->
-    <h3>Experience</h3>
-    {{ exp_formset.management_form }}
-    <div id="exp-container">
-        {% for form in exp_formset %}
-            <div class="exp-form">
-                {{ form.as_p }}
+<!-- hidden empty form -->
+<div id="edu-empty" style="display:none;">
+    {{ edu.empty_form.as_p }}
+</div>
 
-                <!-- remove button -->
-                <button type="button" onclick="removeForm(this)">
-                    Remove
-                </button>
-            </div>
-        {% endfor %}
+<!-- ================= EXPERIENCE ================= -->
+<h5>Experience</h5>
+
+{{ exp.management_form }}
+
+<div id="exp-container">
+    {% for f in exp %}
+    <div class="exp-form border p-3 mb-2 rounded bg-light">
+        {{ f.as_p }}
+        <button type="button" class="btn btn-danger btn-sm" onclick="removeForm(this, 'exp')">Remove</button>
     </div>
-    <button type="button"
-        onclick="addForm('exp-container','id_exp-TOTAL_FORMS')">
-        Add Experience
-    </button>
+    {% endfor %}
+</div>
 
+<button type="button" class="btn btn-primary mb-3" onclick="addForm('exp')">
+    + Add Experience
+</button>
 
-    <!-- PROJECT -->
-    <h3>Projects</h3>
-    {{ proj_formset.management_form }}
+<div id="exp-empty" style="display:none;">
+    {{ exp.empty_form.as_p }}
+</div>
 
-    <div id="proj-container">
-        {% for form in proj_formset %}
-            <div class="proj-form">
-                {{ form.as_p }}
-                <!-- remove button -->
-                <button type="button" onclick="removeForm(this)">
-                    Remove
-                </button>
-            </div>
-        {% endfor %}
+<!-- ================= PROJECT ================= -->
+<h5>Projects</h5>
+
+{{ proj.management_form }}
+
+<div id="proj-container">
+    {% for f in proj %}
+    <div class="proj-form border p-3 mb-2 rounded bg-light">
+        {{ f.as_p }}
+        <button type="button" class="btn btn-danger btn-sm" onclick="removeForm(this, 'proj')">Remove</button>
     </div>
-    <button type="button"
-        onclick="addForm('proj-container','id_proj-TOTAL_FORMS')">
-        Add Project
-    </button>
+    {% endfor %}
+</div>
 
+<button type="button" class="btn btn-primary mb-3" onclick="addForm('proj')">
+    + Add Project
+</button>
 
-    <!-- SKILLS -->
-    <h3>Skills</h3>
-    <!-- user enters comma separated skills -->
-    <input type="text" name="skills" placeholder="Python, Django, SQL">
+<div id="proj-empty" style="display:none;">
+    {{ proj.empty_form.as_p }}
+</div>
 
-    <br><br>
-    <button type="submit">Save</button>
+<!-- ================= SKILLS ================= -->
+<h5>Skills</h5>
+<input type="text" name="skills" class="form-control" value="{{ request.POST.skills }}"  placeholder="Comma separated skills" value="{{ skills }}">
+
+<br>
+<button type="submit" class="btn btn-success w-100">Save Resume</button>
+
 </form>
 
+</div>
 
+<!-- ================= JAVASCRIPT ================= -->
 <script>
-// function to add new form dynamically
-function addForm(containerId, totalFormsId) {
 
-    // get total forms count
-    let totalForms = document.getElementById(totalFormsId);
+function addForm(prefix) {
+
+    let totalForms = document.querySelector('[name="' + prefix + '-TOTAL_FORMS"]');
+
+    if (!totalForms) {
+        alert("Prefix error: " + prefix);
+        return;
+    }
+
     let count = parseInt(totalForms.value);
 
-    // get container
-    let container = document.getElementById(containerId);
+    let emptyForm = document.getElementById(prefix + '-empty').innerHTML;
 
-    // clone first form
-    let firstForm = container.children[0];
-    let newForm = firstForm.cloneNode(true);
+    let newForm = emptyForm.replace(/__prefix__/g, count);
 
-    // update input fields
-    let inputs = newForm.querySelectorAll("input, textarea");
+    let container = document.getElementById(prefix + '-container');
 
-    inputs.forEach(function(input) {
+    container.insertAdjacentHTML(
+        'beforeend',
+        '<div class="'+prefix+'-form border p-3 mb-2 rounded bg-light">'
+        + newForm +
+        '<button type="button" class="btn btn-danger btn-sm" onclick="removeForm(this,\''+prefix+'\')">Remove</button>'
+        + '</div>'
+    );
 
-        // clear old value
-        input.value = "";
-
-        input.name = input.name.replace(/-\d+-/, '-' + count + '-');
-        input.id = input.id.replace(/-\d+-/, '-' + count + '-');
-    });
-
-    // add new form to container
-    container.appendChild(newForm);
-
-    // increase total form count
     totalForms.value = count + 1;
 }
 
-function removeForm(button) {
-    let formDiv = button.parentElement;
-    let container = formDiv.parentElement;
+function removeForm(button, prefix) {
+
+    let container = document.getElementById(prefix + '-container');
 
     if (container.children.length > 1) {
-        formDiv.remove();
+        button.parentElement.remove();
 
-        // update total forms
-        let totalFormsInput = container.parentElement.querySelector('input[name$="TOTAL_FORMS"]');
-        totalFormsInput.value = container.children.length;
+        let totalForms = document.querySelector('[name="' + prefix + '-TOTAL_FORMS"]');
+        totalForms.value = container.children.length;
     }
 }
 
 </script>
-</script>
+
+{% endblock %}

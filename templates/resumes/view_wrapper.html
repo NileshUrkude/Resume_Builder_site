@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="card p-4 shadow">
+
+<div class="d-flex justify-content-between mb-3">
+    <a href="/dashboard/" class="btn btn-secondary">Back</a>
+
+    <div>
+        <a href="{% url 'create_resume' %}?next={{ selected_template }}" class="btn btn-warning">Edit</a>
+        <a href="/download/{{ selected_template }}/" class="btn btn-dark">Download</a>
+    </div>
+</div>
+
+{% include template_name %}
+
+</div>
+
+{% endblock %}

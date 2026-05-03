@@ -10,6 +10,12 @@ class Resume(models.Model):
     phone = models.CharField(max_length=15)
     summary = models.TextField()
 
+    template = models.CharField(
+        max_length=10,
+        choices=[('t1','Template1'),('t2','Template2'),('t3','Template3')],
+        default='t1'
+    )
+
 class Education(models.Model):
     resume = models.ForeignKey(Resume, on_delete=models.CASCADE, related_name='educations')
     degree = models.CharField(max_length=100)
@@ -31,4 +37,4 @@ class Project(models.Model):
 
 class Skill(models.Model):
     resume = models.ForeignKey(Resume, on_delete=models.CASCADE, related_name='skills')
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=100)
