@@ -81,13 +81,47 @@
     {{ proj.empty_form.as_p }}
 </div>
 
+
+<!-- ================= Certificates ================= -->
+<h5>Certificates</h5>
+{{ cert.management_form }}
+
+<div id="cert-container">
+    {% for f in cert %}
+        <div class="cert-form mb-2">
+            {{ f.name }}
+            <button type="button" class="btn btn-danger btn-sm remove-cert">X</button>
+        </div>
+    {% endfor %}
+</div>
+
+<button type="button" class="btn btn-primary btn-sm mt-2" id="add-cert">
+    + Add Certificate
+</button>
+
+<!-- ================= Achievements ================= -->
+<h5 class="mt-4">Achievements</h5>
+{{ ach.management_form }}
+
+<div id="ach-container">
+    {% for f in ach %}
+        <div class="ach-form mb-2">
+            {{ f.title }}
+            <button type="button" class="btn btn-danger btn-sm remove-ach">X</button>
+        </div>
+    {% endfor %}
+</div>
+
+<button type="button" class="btn btn-primary btn-sm mt-2" id="add-ach">
+    + Add Achievement
+</button>
+
 <!-- ================= SKILLS ================= -->
 <h5>Skills</h5>
-<input type="text" name="skills" class="form-control" value="{{ request.POST.skills }}"  placeholder="Comma separated skills" value="{{ skills }}">
-
+<input type="text" name="skills" value="{{ skills }}" class="form-control">
 <br>
-<button type="submit" class="btn btn-success w-100">Save Resume</button>
 
+<button type="submit" class="btn btn-success w-100">Save Resume</button>
 </form>
 
 </div>
@@ -134,6 +168,56 @@ function removeForm(button, prefix) {
         totalForms.value = container.children.length;
     }
 }
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    // CERTIFICATE ADD
+    document.getElementById("add-cert").addEventListener("click", function () {
+        let container = document.getElementById("cert-container");
+        let totalForms = document.getElementById("id_cert-TOTAL_FORMS");
+
+        let formNum = parseInt(totalForms.value);
+
+        let newForm = container.children[0].cloneNode(true);
+
+        newForm.querySelector("input").value = "";
+
+        container.appendChild(newForm);
+
+        totalForms.value = formNum + 1;
+    });
+
+    // CERTIFICATE REMOVE
+    document.addEventListener("click", function(e){
+        if(e.target.classList.contains("remove-cert")){
+            e.target.parentElement.remove();
+        }
+    });
+
+    // ACHIEVEMENT ADD
+    document.getElementById("add-ach").addEventListener("click", function () {
+        let container = document.getElementById("ach-container");
+        let totalForms = document.getElementById("id_ach-TOTAL_FORMS");
+
+        let formNum = parseInt(totalForms.value);
+
+        let newForm = container.children[0].cloneNode(true);
+
+        newForm.querySelector("input").value = "";
+
+        container.appendChild(newForm);
+
+        totalForms.value = formNum + 1;
+    });
+
+    // ACHIEVEMENT REMOVE
+    document.addEventListener("click", function(e){
+        if(e.target.classList.contains("remove-ach")){
+            e.target.parentElement.remove();
+        }
+    });
+
+});
 
 </script>
 

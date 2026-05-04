@@ -4,23 +4,22 @@ from django.contrib.auth.models import User
 
 class Resume(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+
     title = models.CharField(max_length=100)
     full_name = models.CharField(max_length=100)
     email = models.EmailField()
     phone = models.CharField(max_length=15)
     summary = models.TextField()
 
-    template = models.CharField(
-        max_length=10,
-        choices=[('t1','Template1'),('t2','Template2'),('t3','Template3')],
-        default='t1'
-    )
+    github = models.URLField(blank=True, null=True)
+    linkedin = models.URLField(blank=True, null=True)
+
 
 class Education(models.Model):
     resume = models.ForeignKey(Resume, on_delete=models.CASCADE, related_name='educations')
     degree = models.CharField(max_length=100)
     college = models.CharField(max_length=150)
-    year = models.CharField(max_length=10)
+    location = models.CharField(max_length=100, blank=True, null=True)
 
 class Experience(models.Model):
     resume = models.ForeignKey(Resume, on_delete=models.CASCADE, related_name='experiences')
@@ -38,3 +37,11 @@ class Project(models.Model):
 class Skill(models.Model):
     resume = models.ForeignKey(Resume, on_delete=models.CASCADE, related_name='skills')
     name = models.CharField(max_length=100)
+
+class Certificate(models.Model):
+    resume = models.ForeignKey(Resume, on_delete=models.CASCADE, related_name='certificates')
+    name = models.CharField(max_length=200)
+
+class Achievement(models.Model):
+    resume = models.ForeignKey(Resume, on_delete=models.CASCADE, related_name='achievements')
+    title = models.CharField(max_length=200)

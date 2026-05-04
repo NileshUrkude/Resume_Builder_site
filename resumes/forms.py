@@ -1,21 +1,21 @@
 from django import forms
 from django.forms import modelformset_factory
 from django.contrib.auth.models import User
-from .models import Resume, Education, Experience, Project
+from .models import Resume, Education, Experience, Project, Skill, Certificate, Achievement
 
 # form for main resume data
 class ResumeForm(forms.ModelForm):
     class Meta:
         model = Resume
         # fields in form
-        fields = ['title', 'full_name', 'email', 'phone', 'summary']
+        fields = ['title', 'full_name', 'email', 'phone', 'summary', 'github', 'linkedin']
 
         
 
 # formset for multiple education entries,this allows user to add many education rows
 EducationFormSet = modelformset_factory(
     Education,
-    fields=('degree', 'college', 'year'),
+    fields=('degree', 'college', 'location'),
     extra=1,            # show one empty form by default
 )
 
@@ -31,6 +31,19 @@ ProjectFormSet = modelformset_factory(
     extra=1,
     can_delete=False
 )
+
+CertificateFormSet = modelformset_factory(
+    Certificate,
+    fields=('name',),
+    extra=1
+)
+
+AchievementFormSet = modelformset_factory(
+    Achievement,
+    fields=('title',),
+    extra=1
+)
+
 
 # simple signup form
 class SimpleSignupForm(forms.ModelForm):

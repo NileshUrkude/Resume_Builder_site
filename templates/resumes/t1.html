@@ -1,3 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+
+        body {
+            font-family: Arial;
+            font-size: 14px;
+            margin: 30px;
+            color: #000;
+        }
+
+        .container {
+            width: 100%;
+        }
+
+        h2 {
+            font-size: 22px;
+            margin-bottom: 5px;
+        }
+
+        h4 {
+            margin-top: 15px;
+            font-size: 16px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 3px;
+        }
+
+        p {
+            margin: 3px 0;
+        }
+
+    </style>
+</head>
+
+<body>
 <div class="container" style="max-width:800px; margin:auto; font-family:Arial;">
 
     <h2>{{ resume.full_name }}</h2>
@@ -10,21 +46,40 @@
 
     <h4>Education</h4>
     {% for e in resume.educations.all %}
-        <p><strong>{{ e.degree }}</strong> - {{ e.college }} ({{ e.year }})</p>
+        <p><strong>{{ e.degree }}</strong> - {{ e.college }} ({{ e.location }})</p>
     {% endfor %}
 
     <h4>Experience</h4>
     {% for ex in resume.experiences.all %}
         <p><strong>{{ ex.job_title }}</strong> - {{ ex.company }}</p>
         <small>{{ ex.duration }}</small>
-        <p>{{ ex.description }}</p>
+        {% comment %} {% if ex.description %}
+        <ul>
+            {% for point in ex.description.split('.') %}
+                {% if point.strip %}
+                    <li>{{ point }}</li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+        {% endif %} {% endcomment %}
+        <p style="white-space: pre-line;">{{ ex.description }}</p>
+
     {% endfor %}
 
     <h4>Projects</h4>
     {% for p in resume.projects.all %}
         <p><strong>{{ p.name }}</strong></p>
-        <p>{{ p.description }}</p>
-        <small>{{ p.tech_stack }}</small>
+        {% comment %} {% if p.description %}
+            <ul>
+                {% for point in p.description.split(".") %}
+                    {% if point.strip %}
+                        <li>{{ point }}</li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        {% endif %}  {% endcomment %}
+        <p style="white-space: pre-line;">{{ p.description }}</p>
+        <h6>{{ p.tech_stack }}</h6>
     {% endfor %}
 
     <h4>Skills</h4>
@@ -34,4 +89,23 @@
         {% endfor %}
     </p>
 
+    {% if resume.certificates.all %}
+        <h4>Certificates</h4>
+        <p>
+            {% for c in resume.certificates.all %}
+                {{ c.name }}{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+        </p>
+    {% endif %}
+    
+    {% if resume.achievements.all %}
+        <h4>Achievements</h4>
+        <p>
+            {% for a in resume.achievements.all %}
+                {{ a.title }}{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+        </p>
+    {% endif %}
 </div>
+</body>
+</html>

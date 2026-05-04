@@ -1,0 +1,17 @@
+<div class="container" style="max-width:800px">
+
+<h2>{{ resume.full_name }}</h2>
+
+{% if resume.github %}
+<p>GitHub: {{ resume.github }}</p>
+{% endif %}
+
+{% if resume.linkedin %}
+<p>LinkedIn: {{ resume.linkedin }}</p>
+{% endif %}
+
+{% if resume.summary %}
+<p>{{ resume.summary }}</p>
+{% endif %}
+
+</div>

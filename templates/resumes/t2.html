@@ -1,3 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+
+        body {
+            font-family: Arial;
+            font-size: 14px;
+            margin: 30px;
+            color: #000;
+        }
+
+        .container {
+            width: 100%;
+        }
+
+        h2 {
+            font-size: 22px;
+            margin-bottom: 5px;
+        }
+
+        h4 {
+            margin-top: 15px;
+            font-size: 16px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 3px;
+        }
+
+        p {
+            margin: 3px 0;
+        }
+
+    </style>
+</head>
+
+<body>
 <div class="container" style="max-width:800px; margin:auto; font-family:Arial; border-left:5px solid #007bff; padding-left:15px;">
 
     <h2 style="color:#007bff;">{{ resume.full_name }}</h2>
@@ -8,7 +44,7 @@
 
     <h4>Education</h4>
     {% for e in resume.educations.all %}
-        <p><strong>{{ e.degree }}</strong><br>{{ e.college }} - {{ e.year }}</p>
+        <p><strong>{{ e.degree }}</strong><br>{{ e.college }} - {{ e.location }}</p>
     {% endfor %}
 
     <h4>Experience</h4>
@@ -32,3 +68,5 @@
     </ul>
 
 </div>
+</body>
+</html>

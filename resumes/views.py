@@ -1,11 +1,14 @@
+from urllib import request
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from .forms import SimpleSignupForm
+from urllib3 import request
+from .forms import AchievementFormSet, CertificateFormSet, SimpleSignupForm
 from django.contrib.auth import login, logout
 from django.http import HttpResponse
-from django.template.loader import get_template
+from django.template.loader import get_template, render_to_string
+# from weasyprint import HTML
 from xhtml2pdf import pisa
-from .models import Resume, Education ,Experience, Project, Skill
+from .models import Achievement, Achievement, Certificate, Resume, Education ,Experience, Project, Skill
 from .forms import ResumeForm, EducationFormSet, ExperienceFormSet, ProjectFormSet
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
@@ -62,6 +65,7 @@ def create_resume(request):
 
     # get existing resume (one per user)
     resume = Resume.objects.filter(user=request.user).first()
+    skills = ""   
 
     if request.method == 'POST':
 
@@ -72,12 +76,17 @@ def create_resume(request):
         edu_formset = EducationFormSet(request.POST or None, queryset=Education.objects.none(), prefix='edu')
         exp_formset = ExperienceFormSet(request.POST or None, queryset=Experience.objects.none(), prefix='exp')
         proj_formset = ProjectFormSet(request.POST or None, queryset=Project.objects.none(), prefix='proj')
+        cert_formset = CertificateFormSet(request.POST or None, queryset=Certificate.objects.none(), prefix='cert')
+        ach_formset = AchievementFormSet(request.POST or None, queryset=Achievement.objects.none(), prefix='ach')
+        
         # validation
         if (
             resume_form.is_valid() and
             edu_formset.is_valid() and
             exp_formset.is_valid() and
-            proj_formset.is_valid()
+            proj_formset.is_valid() and
+            cert_formset.is_valid() and
+            ach_formset.is_valid()
         ):
 
             # save resume
@@ -90,6 +99,8 @@ def create_resume(request):
             resume.experiences.all().delete()
             resume.projects.all().delete()
             resume.skills.all().delete()
+            resume.certificates.all().delete()
+            resume.achievements.all().delete()
 
             # save education
             for form in edu_formset:
@@ -112,17 +123,41 @@ def create_resume(request):
                     proj.resume = resume
                     proj.save()
 
-            # save skills (comma separated)
-            skills = request.POST.get('skills', '').strip()
-            if skills:
-                skill_list = skills.split(',')
 
-                for s in skill_list:
-                    s = s.strip()
-                    if s:
-                        Skill.objects.create(resume=resume, name=s)
+            for form in cert_formset:
+                if form.cleaned_data:
+                    cert = form.save(commit=False)
+                    cert.resume = resume
+                    cert.save()
+
+            for form in ach_formset:
+                if form.cleaned_data:
+                    ach = form.save(commit=False)
+                    ach.resume = resume
+                    ach.save()
+
+            # save skills (comma separated)
+            skills = request.POST.get('skills', '')
+
+            for s in skills.split(','):
+                if s.strip():
+                    Skill.objects.create(resume=resume, name=s.strip())
 
             # get where user came from
+            next_page = request.GET.get('next') or request.POST.get('next')
+
+            if next_page in ['t1', 't2', 't3']:
+                return redirect('view_resume', template=next_page)
+
+            elif next_page == 'dashboard':
+                return redirect('dashboard')
+
+            return redirect('dashboard')  # default
+        
+        else:
+            # keep entered skills on error
+            skills = request.POST.get('skills', '')
+
             next_page = request.GET.get('next') or request.POST.get('next')
 
             if next_page in ['t1', 't2', 't3']:
@@ -142,12 +177,20 @@ def create_resume(request):
         edu_formset = EducationFormSet(prefix='edu')
         exp_formset = ExperienceFormSet(prefix='exp')
         proj_formset = ProjectFormSet(prefix='proj')
+        cert_formset = CertificateFormSet(prefix='cert')
+        ach_formset = AchievementFormSet(prefix='ach')
+
+        if resume:
+            skills = ", ".join([s.name for s in resume.skills.all()])
 
     return render(request, 'resumes/form.html', {
+        'skills': skills,
         'form': resume_form,
         'edu': edu_formset,
         'exp': exp_formset,
-        'proj': proj_formset
+        'proj': proj_formset,
+        'cert': cert_formset,
+        'ach': ach_formset
     })
 
 
@@ -160,6 +203,11 @@ def view_resume(request, template):
         't1': 'resumes/t1.html',
         't2': 'resumes/t2.html',
         't3': 'resumes/t3.html',
+        't4': 'resumes/t4.html',
+        't5': 'resumes/t5.html',
+        't6': 'resumes/t6.html',
+
+
     }
 
     return render(request, 'resumes/view_wrapper.html', {
@@ -178,13 +226,21 @@ def download_pdf(request, template):
     template_map = {
         't1': 'resumes/t1.html',
         't2': 'resumes/t2.html',
-        't3': 'resumes/t3.html'
+        't3': 'resumes/t3.html',
+        't4': 'resumes/t4.html',
+        't5': 'resumes/t5.html',
+        't6': 'resumes/t6.html',
     }
 
     template_file = get_template(template_map.get(template, 'resumes/t1.html'))
     html = template_file.render({'resume': resume})
+    # html_string = render_to_string(template_map[template], {'resume': resume})
 
-    response = HttpResponse(content_type='application/pdf')
+    # html = HTML(string=html_string)
+    # result = html.write_pdf()
+
+
+    response = HttpResponse( content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="resume.pdf"'
 
     pisa.CreatePDF(html, dest=response)

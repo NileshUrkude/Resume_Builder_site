@@ -1,18 +1,52 @@
-<div class="container" style="max-width:800px; margin:auto; font-family:Arial; text-align:center;">
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+
+        body {
+            font-family: Arial;
+            font-size: 15px;
+            margin: 30px;
+            color: #000;
+        }
+
+        .container {
+            width: 100%;
+        }
+
+        h2 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        h4 {
+            margin-top: 15px;
+            font-size: 16px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 3px;
+        }
+
+        p {
+            margin: 3px 0;
+        }
+
+    </style>
+</head>
+
+<body>
+<div class="container" style="max-width:800px; margin:auto; font-family:Arial; text-align:center ;">
 
     <h2>{{ resume.full_name }}</h2>
     <p>{{ resume.email }} | {{ resume.phone }}</p>
 
     <hr>
-
-    <h4>About Me</h4>
-    <p>{{ resume.summary }}</p>
-
     <div style="text-align:left;">
+        <h4>About Me</h4>
+        <p>{{ resume.summary }}</p>
 
         <h4>Education</h4>
         {% for e in resume.educations.all %}
-            <p>{{ e.degree }} - {{ e.college }} ({{ e.year }})</p>
+            <p>{{ e.degree }} - {{ e.college }} ({{ e.location }})</p>
         {% endfor %}
 
         <h4>Experience</h4>
@@ -38,3 +72,5 @@
     </div>
 
 </div>
+</body>
+</html>
