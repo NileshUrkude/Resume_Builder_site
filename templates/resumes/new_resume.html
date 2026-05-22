@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="mx-auto max-w-md card p-6">
+    <h1 class="text-xl font-bold dark:text-white">New resume</h1>
+    <form method="post" class="mt-4">{% csrf_token %}
+        <label class="text-sm font-medium">Resume name</label>
+        <input name="resume_name" class="mt-1 w-full rounded-lg border px-3 py-2 dark:border-slate-600 dark:bg-slate-800" placeholder="e.g. Tech role, Internship" required>
+        <button class="btn-primary mt-4 w-full">Create</button>
+    </form>
+</div>
+{% endblock %}

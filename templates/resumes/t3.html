@@ -1,76 +1,43 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <style>
-
-        body {
-            font-family: Arial;
-            font-size: 15px;
-            margin: 30px;
-            color: #000;
-        }
-
-        .container {
-            width: 100%;
-        }
-
-        h2 {
-            font-size: 24px;
-            margin-bottom: 5px;
-        }
-
-        h4 {
-            margin-top: 15px;
-            font-size: 16px;
-            border-bottom: 1px solid #000;
-            padding-bottom: 3px;
-        }
-
-        p {
-            margin: 3px 0;
-        }
-
-    </style>
-</head>
-
-<body>
-<div class="container" style="max-width:800px; margin:auto; font-family:Arial; text-align:center ;">
-
-    <h2>{{ resume.full_name }}</h2>
-    <p>{{ resume.email }} | {{ resume.phone }}</p>
-
-    <hr>
-    <div style="text-align:left;">
-        <h4>About Me</h4>
-        <p>{{ resume.summary }}</p>
-
-        <h4>Education</h4>
-        {% for e in resume.educations.all %}
-            <p>{{ e.degree }} - {{ e.college }} ({{ e.location }})</p>
-        {% endfor %}
-
-        <h4>Experience</h4>
-        {% for ex in resume.experiences.all %}
-            <p><strong>{{ ex.job_title }}</strong></p>
-            <p>{{ ex.company }} | {{ ex.duration }}</p>
-            <p>{{ ex.description }}</p>
-        {% endfor %}
-
-        <h4>Projects</h4>
-        {% for p in resume.projects.all %}
-            <p><strong>{{ p.name }}</strong> - {{ p.tech_stack }}</p>
-            <p>{{ p.description }}</p>
-        {% endfor %}
-
-        <h4>Skills</h4>
-        <p>
-            {% for s in resume.skills.all %}
-                {{ s.name }}{% if not forloop.last %} | {% endif %}
-            {% endfor %}
-        </p>
-
-    </div>
-
+{% if for_pdf %}<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>{% endif %}
+{% if resume %}
+{% with accent=accent_color|default:"#0f172a" font=font_family|default:"Segoe UI" %}
+<style>
+.rs-t3{--a:{{ accent }};font-family:{{ font }},system-ui,sans-serif;font-size:13px;line-height:1.6;color:#334155;max-width:760px;margin:0 auto;background:#fff;padding:{% if for_pdf %}32px{% else %}28px{% endif %};}
+.rs-t3 .rs-header{text-align:center;padding-bottom:24px;margin-bottom:24px;border-bottom:1px solid #e2e8f0;}
+.rs-t3 h1{font-size:32px;font-weight:300;color:#0f172a;margin:0;letter-spacing:-0.03em;}
+.rs-t3 .rs-role{font-size:13px;text-transform:uppercase;letter-spacing:0.2em;color:var(--a);margin:10px 0 14px;font-weight:600;}
+.rs-t3 .rs-contact{justify-content:center;display:flex;flex-wrap:wrap;gap:4px 0;font-size:12px;color:#64748b;}
+.rs-t3 .rs-contact-sep{margin:0 8px;color:#e2e8f0;}
+.rs-t3 .rs-photo{width:96px;height:96px;border-radius:50%;object-fit:cover;margin:0 auto 16px;display:block;border:2px solid #e2e8f0;}
+.rs-t3 .rs-section{margin-bottom:22px;}
+.rs-t3 .rs-h2{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.18em;color:#94a3b8;margin:0 0 14px;text-align:center;}
+.rs-t3 .rs-h2:after{content:'';display:block;width:40px;height:2px;background:var(--a);margin:8px auto 0;}
+.rs-t3 .rs-entry{margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #f1f5f9;}
+.rs-t3 .rs-entry:last-child{border-bottom:none;}
+.rs-t3 .rs-entry-title{font-weight:600;color:#0f172a;font-size:14px;}
+.rs-t3 .rs-entry-org{color:#64748b;font-size:13px;}
+.rs-t3 .rs-meta{font-size:11px;color:#94a3b8;margin-top:4px;}
+.rs-t3 .rs-text{font-size:13px;color:#475569;}
+.rs-t3 .rs-summary{text-align:center;font-size:14px;line-height:1.75;color:#475569;}
+.rs-t3 .rs-pre{white-space:pre-line;text-align:left;}
+.rs-t3 .rs-bullets{padding-left:18px;font-size:13px;color:#475569;}
+.rs-t3 .rs-pills{justify-content:center;display:flex;flex-wrap:wrap;gap:8px;}
+.rs-t3 .rs-pills{gap:0;}
+.rs-t3 .rs-pill{font-size:12px;color:#475569;background:none;border:none;padding:0;}
+.rs-t3 .rs-pill-lvl{color:#94a3b8;font-style:normal;}
+.rs-t3 .rs-list{text-align:center;list-style:none;padding:0;}
+.rs-t3 .rs-list li{margin-bottom:6px;}
+.rs-t3 .rs-tag-inline{display:block;font-size:12px;color:#94a3b8;margin-top:2px;}
+</style>
+<div class="rs-t3">
+    <header class="rs-header">
+        {% if resume.photo %}<img src="{{ resume.photo.url }}" class="rs-photo" alt="">{% endif %}
+        <h1>{{ resume.full_name }}</h1>
+        <p class="rs-role">{{ resume.title }}</p>
+        {% include 'resumes/includes/resume_head_contact.html' %}
+    </header>
+    {% include 'resumes/includes/resume_content.html' with section_summary="About Me" %}
 </div>
-</body>
-</html>
+{% endwith %}
+{% else %}<p class="text-sm text-slate-500">No resume data.</p>{% endif %}
+{% if for_pdf %}</body></html>{% endif %}

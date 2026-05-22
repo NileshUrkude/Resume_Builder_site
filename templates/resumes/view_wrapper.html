@@ -1,76 +1,42 @@
 {% extends 'base.html' %}
+{% block title %}Preview {{ selected_template|upper }}{% endblock %}
 {% block content %}
-
-<div class="row">
-<div class="text-center mb-4">
-    <h2>Welcome, {{ request.user.username }}</h2>
-    <p class="text-muted">Build and manage your resume easily</p>
-</div>
-    <!-- LEFT: ACTION PANEL -->
-    <div class="col-md-4">
-
-        <div class="card p-3 shadow-sm mb-3">
-            <h5>Actions</h5>
-
-            <a href="{% url 'create_resume' %}?next={{ selected_template }}"
-               class="btn btn-warning w-100 mb-2">
-                Edit Resume
-            </a>
-
-            <a href="{% url 'download_pdf' selected_template %}"
-               class="btn btn-success w-100">
-                Download PDF
-            </a>
+{% if not resume %}<div class="card p-8 text-center"><a href="{% url 'new_resume' %}" class="btn-primary">Create resume</a></div>
+{% else %}
+<div class="print-layout grid gap-6 lg:grid-cols-12">
+    <aside class="no-print space-y-4 lg:col-span-4">
+        <div class="card p-4 space-y-2">
+            <a href="{% url 'edit_resume' resume.pk %}" class="block rounded-xl bg-amber-500 py-2 text-center text-sm font-semibold text-white">Edit</a>
+            <button onclick="window.print()" class="w-full rounded-xl border py-2 text-sm dark:border-slate-600">Print</button>
+            <a href="{% url 'download_pdf' resume.pk selected_template %}" class="block rounded-xl bg-emerald-600 py-2 text-center text-sm font-semibold text-white">PDF</a>
+            <a href="{% url 'download_docx' resume.pk %}" class="block rounded-xl bg-blue-600 py-2 text-center text-sm font-semibold text-white">DOCX</a>
         </div>
-
-        <div class="card p-3 shadow-sm">
-            <h6>Templates</h6>
-
-            <a href="{% url 'view_resume' 't1' %}"
-               class="btn btn-outline-primary w-100 mb-2">
-                Template 1
-            </a>
-
-            <a href="{% url 'view_resume' 't2' %}"
-               class="btn btn-outline-primary w-100 mb-2">
-                Template 2
-            </a>
-
-            <a href="{% url 'view_resume' 't3' %}"
-               class="btn btn-outline-primary w-100 mb-2">
-                Template 3
-            </a>
-            <a href="{% url 'view_resume' 't4' %}"
-               class="btn btn-outline-primary w-100 mb-2">
-                Template 4
-            </a>
-            <a href="{% url 'view_resume' 't5' %}"
-               class="btn btn-outline-primary w-100 mb-2">
-                Template 5
-            </a>
-            <a href="{% url 'view_resume' 't6' %}"
-               class="btn btn-outline-primary w-100 mb-2">
-                Template 6
-            </a>
+        <div class="card p-4">
+            <p class="text-xs text-slate-500 mb-2">Templates</p>
+            <a href="{% url 'view_resume' resume.pk 't1' %}" class="block rounded px-2 py-1 text-sm {% if selected_template == 't1' %}bg-indigo-100 dark:bg-indigo-950 font-semibold{% endif %}">T1</a>
+            <a href="{% url 'view_resume' resume.pk 't2' %}" class="block rounded px-2 py-1 text-sm {% if selected_template == 't2' %}bg-indigo-100 dark:bg-indigo-950 font-semibold{% endif %}">T2</a>
+            <a href="{% url 'view_resume' resume.pk 't3' %}" class="block rounded px-2 py-1 text-sm {% if selected_template == 't3' %}bg-indigo-100 dark:bg-indigo-950 font-semibold{% endif %}">T3</a>
+            <a href="{% url 'view_resume' resume.pk 't4' %}" class="block rounded px-2 py-1 text-sm {% if selected_template == 't4' %}bg-indigo-100 dark:bg-indigo-950 font-semibold{% endif %}">T4</a>
+            <a href="{% url 'view_resume' resume.pk 't5' %}" class="block rounded px-2 py-1 text-sm {% if selected_template == 't5' %}bg-indigo-100 dark:bg-indigo-950 font-semibold{% endif %}">T5</a>
+            <a href="{% url 'view_resume' resume.pk 't6' %}" class="block rounded px-2 py-1 text-sm {% if selected_template == 't6' %}bg-indigo-100 dark:bg-indigo-950 font-semibold{% endif %}">T6</a>
+            <a href="{% url 'view_resume' resume.pk 't7' %}" class="block rounded px-2 py-1 text-sm {% if selected_template == 't7' %}bg-indigo-100 dark:bg-indigo-950 font-semibold{% endif %}">T7</a>
+            <a href="{% url 'view_resume' resume.pk 't8' %}" class="block rounded px-2 py-1 text-sm {% if selected_template == 't8' %}bg-indigo-100 dark:bg-indigo-950 font-semibold{% endif %}">T8</a>
         </div>
-
+        {% if resume.is_public %}
+        <div class="card p-4 text-xs break-all">
+            <p>Public link:</p>
+            <a href="{{ share_url }}" class="text-brand-600">{{ share_url }}</a>
+            <img src="{% url 'qr_code' resume.pk %}" class="mt-2 h-20" alt="QR">
+        </div>
+        {% endif %}
+    </aside>
+    <div class="lg:col-span-8">
+        <div class="print-resume-shell card p-4">
+            <div class="print-resume-area mx-auto max-w-[210mm] bg-white p-2 rounded-xl">
+                {% include template_name with accent_color=resume.accent_color font_family=resume.font_family %}
+            </div>
+        </div>
     </div>
-
-    <!-- RIGHT: PREVIEW -->
-    <div class="col-md-8">
-
-        <div class="card p-3 shadow-sm">
-
-            <h5 class="mb-3">
-                Preview Resume({{ selected_template|upper }})
-            </h5>
-
-            {% include template_name %}
-
-        </div>
-
-    </div>
-
 </div>
-
+{% endif %}
 {% endblock %}

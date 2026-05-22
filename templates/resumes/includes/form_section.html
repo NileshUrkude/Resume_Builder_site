@@ -1,0 +1,30 @@
+<section class="card p-4" data-section="{{ prefix }}">
+    <h2 class="text-sm font-semibold uppercase text-slate-500 dark:text-slate-400">{{ title }}</h2>
+    <p class="mt-1 text-xs text-slate-400">Drag rows to reorder, or use ↑ ↓</p>
+    {{ formset.management_form }}
+    {% if formset.non_form_errors %}
+    <div class="mt-2 text-xs text-rose-600">{{ formset.non_form_errors }}</div>
+    {% endif %}
+    <div id="{{ prefix }}-container" class="sortable-list mt-3 space-y-2" data-prefix="{{ prefix }}">
+        {% for f in formset %}
+        <div class="{{ prefix }}-form form-row rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800/50" draggable="true" data-form-row>
+            <div class="mb-2 flex items-center gap-2">
+                <span class="drag-handle cursor-grab text-slate-400 active:cursor-grabbing" title="Drag to reorder">⠿</span>
+                <button type="button" class="rounded border px-2 text-xs hover:bg-slate-100 dark:hover:bg-slate-700" data-move="up" aria-label="Move up">↑</button>
+                <button type="button" class="rounded border px-2 text-xs hover:bg-slate-100 dark:hover:bg-slate-700" data-move="down" aria-label="Move down">↓</button>
+            </div>
+            {{ f.as_p }}
+            {% for field in f.hidden_fields %}{{ field }}{% endfor %}
+            {% if f.errors %}<div class="mt-1 text-xs text-rose-600">{{ f.errors }}</div>{% endif %}
+            {% if prefix == 'exp' or prefix == 'proj' %}
+            {% for field in f.visible_fields %}{% if field.name == 'description' %}
+            <button type="button" class="mt-1 text-xs text-brand-600" data-bullet-btn data-target="{{ field.id_for_label }}">Format as bullets</button>
+            {% endif %}{% endfor %}
+            {% endif %}
+            <button type="button" class="mt-2 text-xs text-rose-600" data-remove-row>Remove</button>
+        </div>
+        {% endfor %}
+    </div>
+    <button type="button" class="mt-2 text-sm font-medium text-brand-600" data-add-form="{{ prefix }}">+ Add {{ title }}</button>
+    <div id="{{ prefix }}-empty" class="hidden">{{ formset.empty_form.as_p }}{% for field in formset.empty_form.hidden_fields %}{{ field }}{% endfor %}</div>
+</section>

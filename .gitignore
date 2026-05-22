@@ -3,6 +3,9 @@ __pycache__/
 db.sqlite3
 .env
 venv/
+node_modules/
+tailwindcss.exe
+package-lock.json
 re_env/
 media/
 staticfiles/

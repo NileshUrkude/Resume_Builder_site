@@ -1,0 +1,6 @@
+<div class="rs-contact">
+    <a class="rs-contact-item" href="mailto:{{ resume.email }}">{{ resume.email }}</a>
+    {% if resume.phone %}<span class="rs-contact-sep">|</span><span class="rs-contact-item">{{ resume.phone }}</span>{% endif %}
+    {% if resume.linkedin %}<span class="rs-contact-sep">|</span><span class="rs-contact-item rs-link">{{ resume.linkedin }}</span>{% endif %}
+    {% if resume.github %}<span class="rs-contact-sep">|</span><span class="rs-contact-item rs-link">{{ resume.github }}</span>{% endif %}
+</div>

@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-6 dark:text-white">Account settings</h1>
+<div class="grid gap-6 md:grid-cols-2">
+    <form method="post" class="card p-5">{% csrf_token %}<input type="hidden" name="action" value="profile">
+        <h2 class="font-semibold mb-3">Profile</h2>{{ profile_form.as_p }}
+        <button class="btn-primary mt-3">Save profile</button>
+    </form>
+    <form method="post" class="card p-5">{% csrf_token %}<input type="hidden" name="action" value="password">
+        <h2 class="font-semibold mb-3">Change password</h2>{{ password_form.as_p }}
+        <button class="btn-primary mt-3">Update password</button>
+    </form>
+</div>
+<form method="post" class="mt-6 card p-5 border-rose-200 dark:border-rose-900" onsubmit="return confirm('Delete account permanently?')">
+    {% csrf_token %}<input type="hidden" name="action" value="delete_account">
+    <h2 class="font-semibold text-rose-600">Danger zone</h2>
+    <button class="mt-2 rounded-lg bg-rose-600 px-4 py-2 text-sm text-white">Delete account</button>
+</form>
+<p class="mt-4 text-sm"><a href="{% url 'password_reset' %}" class="text-brand-600">Forgot password?</a></p>
+{% endblock %}

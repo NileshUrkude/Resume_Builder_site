@@ -1,66 +1,242 @@
 from django import forms
-from django.forms import modelformset_factory
+from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.models import User
-from .models import Resume, Education, Experience, Project, Skill, Certificate, Achievement
+from django.forms import BaseModelFormSet, modelformset_factory
 
-# form for main resume data
-class ResumeForm(forms.ModelForm):
+from .models import (
+    Achievement,
+    Certificate,
+    Education,
+    Experience,
+    Hobby,
+    Language,
+    Project,
+    Resume,
+    Skill,
+)
+
+INPUT_CLASS = (
+    'mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 '
+    'text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none '
+    'focus:ring-2 focus:ring-indigo-500/20 '
+    'dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100'
+)
+TEXTAREA_CLASS = INPUT_CLASS + ' min-h-[88px]'
+LABEL_CLASS = 'block text-sm font-medium text-slate-700 dark:text-slate-300'
+DATE_CLASS = INPUT_CLASS + ' max-w-xs'
+
+
+class TailwindModelForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            widget = field.widget
+            if isinstance(widget, forms.Textarea):
+                widget.attrs.setdefault('class', TEXTAREA_CLASS)
+            elif isinstance(widget, forms.DateInput):
+                widget.attrs.setdefault('class', DATE_CLASS)
+                widget.input_type = 'date'
+            elif isinstance(widget, forms.CheckboxInput):
+                widget.attrs.setdefault('class', 'h-4 w-4 rounded border-slate-300 text-indigo-600')
+            elif isinstance(widget, (forms.FileInput, forms.Select)):
+                widget.attrs.setdefault('class', INPUT_CLASS)
+            else:
+                widget.attrs.setdefault('class', INPUT_CLASS)
+
+
+class OptionalRowFormSet(BaseModelFormSet):
+    """Ignore completely empty extra rows so save does not fail validation."""
+
+    def clean(self):
+        super().clean()
+        for form in self.forms:
+            if not form.cleaned_data:
+                continue
+            if form.cleaned_data.get('DELETE'):
+                continue
+            if not self._row_has_data(form):
+                form.cleaned_data = {'DELETE': True}
+
+    def _row_has_data(self, form):
+        for field, value in form.cleaned_data.items():
+            if field in ('DELETE', 'id', 'order'):
+                continue
+            if value not in (None, '', False):
+                return True
+        return False
+
+
+class ResumeForm(TailwindModelForm):
+    share_password_plain = forms.CharField(
+        required=False,
+        label='Share password (optional)',
+        widget=forms.PasswordInput(attrs={'class': INPUT_CLASS, 'autocomplete': 'new-password'}),
+    )
+
     class Meta:
         model = Resume
-        # fields in form
-        fields = ['title', 'full_name', 'email', 'phone', 'summary', 'github', 'linkedin']
+        fields = [
+            'resume_name', 'photo', 'title', 'full_name', 'email', 'phone', 'summary',
+            'github', 'linkedin', 'preferred_template', 'accent_color', 'font_family',
+            'is_public', 'share_expires_at',
+        ]
+        widgets = {
+            'summary': forms.Textarea(attrs={'rows': 4, 'id': 'id_summary'}),
+            'accent_color': forms.TextInput(attrs={'type': 'color'}),
+            'share_expires_at': forms.DateTimeInput(
+                attrs={'type': 'datetime-local', 'class': INPUT_CLASS},
+                format='%Y-%m-%dT%H:%M',
+            ),
+            'is_public': forms.CheckboxInput(),
+            'github': forms.URLInput(attrs={'placeholder': 'https://github.com/username'}),
+            'linkedin': forms.URLInput(attrs={'placeholder': 'https://linkedin.com/in/username'}),
+        }
 
-        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['share_expires_at'].required = False
+        self.fields['share_expires_at'].input_formats = ['%Y-%m-%dT%H:%M', '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M']
 
-# formset for multiple education entries,this allows user to add many education rows
-EducationFormSet = modelformset_factory(
-    Education,
-    fields=('degree', 'college', 'location'),
-    extra=1,            # show one empty form by default
+    def clean_github(self):
+        val = self.cleaned_data.get('github') or ''
+        return val.strip()
+
+    def clean_linkedin(self):
+        val = self.cleaned_data.get('linkedin') or ''
+        return val.strip()
+
+
+class EducationForm(TailwindModelForm):
+    class Meta:
+        model = Education
+        fields = ('degree', 'college', 'location', 'start_date', 'end_date', 'duration')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for f in ('degree', 'college', 'location', 'duration'):
+            self.fields[f].required = False
+
+
+class ExperienceForm(TailwindModelForm):
+    class Meta:
+        model = Experience
+        fields = ('job_title', 'company', 'start_date', 'end_date', 'duration', 'description')
+        widgets = {'description': forms.Textarea(attrs={'rows': 3})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for f in self.fields:
+            self.fields[f].required = False
+
+
+class ProjectForm(TailwindModelForm):
+    class Meta:
+        model = Project
+        fields = ('name', 'description', 'tech_stack')
+        widgets = {'description': forms.Textarea(attrs={'rows': 3})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for f in self.fields:
+            self.fields[f].required = False
+
+
+def _optional_formset(model, form, fields, prefix, extra=1):
+    return modelformset_factory(
+        model,
+        fields=fields,
+        form=form,
+        formset=OptionalRowFormSet,
+        extra=extra,
+        can_delete=True,
+    )
+
+
+EducationFormSet = _optional_formset(Education, EducationForm, ('degree', 'college', 'location', 'start_date', 'end_date', 'duration'), 'edu')
+ExperienceFormSet = _optional_formset(Experience, ExperienceForm, ('job_title', 'company', 'start_date', 'end_date', 'duration', 'description'), 'exp')
+ProjectFormSet = _optional_formset(Project, ProjectForm, ('name', 'description', 'tech_stack'), 'proj')
+
+def _make_optional_form(model, fields):
+    meta = type('Meta', (), {'model': model, 'fields': fields})
+
+    class OptionalForm(TailwindModelForm):
+        class Meta(meta):
+            pass
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            for f in self.fields:
+                self.fields[f].required = False
+
+    return OptionalForm
+
+
+SkillFormSet = modelformset_factory(
+    Skill, form=_make_optional_form(Skill, ('name', 'level')),
+    formset=OptionalRowFormSet, extra=2, can_delete=True,
 )
-
-ExperienceFormSet = modelformset_factory(
-    Experience,
-    fields=('job_title', 'company', 'duration', 'description'),
-    extra=1,
-)
-
-ProjectFormSet = modelformset_factory(
-    Project,
-    fields=('name', 'description', 'tech_stack'),
-    extra=1,
-    can_delete=False
-)
-
 CertificateFormSet = modelformset_factory(
-    Certificate,
-    fields=('name',),
-    extra=1
+    Certificate, form=_make_optional_form(Certificate, ('name',)),
+    formset=OptionalRowFormSet, extra=1, can_delete=True,
 )
-
 AchievementFormSet = modelformset_factory(
-    Achievement,
-    fields=('title',),
-    extra=1
+    Achievement, form=_make_optional_form(Achievement, ('title',)),
+    formset=OptionalRowFormSet, extra=1, can_delete=True,
+)
+LanguageFormSet = modelformset_factory(
+    Language, form=_make_optional_form(Language, ('name', 'proficiency')),
+    formset=OptionalRowFormSet, extra=1, can_delete=True,
+)
+HobbyFormSet = modelformset_factory(
+    Hobby, form=_make_optional_form(Hobby, ('name',)),
+    formset=OptionalRowFormSet, extra=1, can_delete=True,
 )
 
 
-# simple signup form
 class SimpleSignupForm(forms.ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput)
-    confirm_password = forms.CharField(widget=forms.PasswordInput)
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'class': INPUT_CLASS}))
+    confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'class': INPUT_CLASS}))
 
     class Meta:
         model = User
-        fields = ['username', 'password']
+        fields = ['username', 'email']
+        widgets = {
+            'username': forms.TextInput(attrs={'class': INPUT_CLASS}),
+            'email': forms.EmailInput(attrs={'class': INPUT_CLASS}),
+        }
 
-    # check both passwords match
     def clean(self):
-        cleaned_data = super().clean()
-        password = cleaned_data.get("password")
-        confirm = cleaned_data.get("confirm_password")
+        cleaned = super().clean()
+        if cleaned.get('password') != cleaned.get('confirm_password'):
+            raise forms.ValidationError('Passwords do not match')
+        return cleaned
 
-        if password != confirm:
-            raise forms.ValidationError("Passwords do not match")
 
-        return cleaned_data
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'first_name', 'last_name']
+        widgets = {
+            'username': forms.TextInput(attrs={'class': INPUT_CLASS}),
+            'email': forms.EmailInput(attrs={'class': INPUT_CLASS}),
+            'first_name': forms.TextInput(attrs={'class': INPUT_CLASS}),
+            'last_name': forms.TextInput(attrs={'class': INPUT_CLASS}),
+        }
+
+
+class JobDescriptionForm(forms.Form):
+    job_description = forms.CharField(
+        widget=forms.Textarea(attrs={'class': TEXTAREA_CLASS, 'rows': 10}),
+        label='Job description',
+    )
+
+
+class SharePasswordForm(forms.Form):
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'class': INPUT_CLASS}))
+
+
+class TailwindPasswordChangeForm(PasswordChangeForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs['class'] = INPUT_CLASS

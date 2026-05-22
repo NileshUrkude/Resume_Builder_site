@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}ATS Checker{% endblock %}
+{% block content %}
+<a href="{% url 'dashboard' %}" class="text-sm text-brand-600">← Dashboard</a>
+<h1 class="mt-4 text-2xl font-bold dark:text-white">ATS score — {{ resume.resume_name }}</h1>
+<div class="mt-6 card p-6">
+    <p class="text-4xl font-bold text-brand-600">{{ result.score }}/{{ result.max_score }}</p>
+    <p class="text-lg font-medium mt-1">{{ result.grade }}</p>
+    <ul class="mt-6 space-y-2">
+        {% for c in result.checks %}
+        <li class="flex gap-2 text-sm {% if c.ok %}text-emerald-700 dark:text-emerald-400{% else %}text-amber-700 dark:text-amber-400{% endif %}">
+            <span>{% if c.ok %}✓{% else %}○{% endif %}</span>{{ c.text }}
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

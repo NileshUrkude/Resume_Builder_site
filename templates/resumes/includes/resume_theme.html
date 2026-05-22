@@ -1,0 +1,7 @@
+{% comment %}Inject accent color and font into resume templates{% endcomment %}
+<style>
+  .resume-themed { --accent: {{ accent_color|default:"#4f46e5" }}; font-family: {{ font_family|default:"Arial" }}, sans-serif; }
+  .resume-themed h1, .resume-themed h2, .resume-themed .accent { color: var(--accent); }
+  .resume-themed .accent-bg { background: var(--accent); color: #fff; }
+  .resume-themed .accent-border { border-color: var(--accent); }
+</style>

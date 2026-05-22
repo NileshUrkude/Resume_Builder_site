@@ -1,17 +1,60 @@
-<div class="container" style="max-width:800px">
-
-<h2>{{ resume.full_name }}</h2>
-
-{% if resume.github %}
-<p>GitHub: {{ resume.github }}</p>
-{% endif %}
-
-{% if resume.linkedin %}
-<p>LinkedIn: {{ resume.linkedin }}</p>
-{% endif %}
-
-{% if resume.summary %}
-<p>{{ resume.summary }}</p>
-{% endif %}
-
+{% if for_pdf %}<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>{% endif %}
+{% if resume %}
+{% with accent=accent_color|default:"#4f46e5" font=font_family|default:"Arial" %}
+<style>
+.rs-t4{--a:{{ accent }};font-family:{{ font }},Arial,sans-serif;font-size:12.5px;line-height:1.5;color:#334155;max-width:800px;margin:0 auto;}
+.rs-t4 table{width:100%;border-collapse:collapse;}
+.rs-t4 .rs-side{background:linear-gradient(180deg,#0f172a 0%,#1e293b 100%);color:#f8fafc;padding:24px 20px;vertical-align:top;width:34%;}
+.rs-t4 .rs-side-inner{position:relative;}
+.rs-t4 .rs-photo{width:100px;height:100px;border-radius:12px;object-fit:cover;border:3px solid var(--a);display:block;margin:0 auto 16px;}
+.rs-t4 .rs-side h1{font-size:20px;font-weight:700;color:#fff;margin:0 0 6px;text-align:center;line-height:1.25;}
+.rs-t4 .rs-side .rs-role{font-size:12px;color:var(--a);text-align:center;margin:0 0 18px;font-weight:600;}
+.rs-t4 .rs-side-h3{font-size:9px;text-transform:uppercase;letter-spacing:0.15em;color:#94a3b8;margin:18px 0 8px;font-weight:700;}
+.rs-t4 .rs-side p,.rs-t4 .rs-side .rs-contact-item{font-size:11px;color:#cbd5e1;line-height:1.6;margin:4px 0;display:block;}
+.rs-t4 .rs-side .rs-contact-sep{display:none;}
+.rs-t4 .rs-skill-item{display:block;padding:6px 10px;background:rgba(255,255,255,0.06);border-radius:6px;margin-bottom:5px;font-size:11px;border-left:3px solid var(--a);}
+.rs-t4 .rs-main{padding:24px 28px;vertical-align:top;background:#fff;}
+.rs-t4 .rs-main .rs-section{margin-bottom:16px;}
+.rs-t4 .rs-main .rs-h2{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--a);margin:0 0 10px;padding-bottom:4px;border-bottom:2px solid #f1f5f9;}
+.rs-t4 .rs-entry{margin-bottom:12px;}
+.rs-t4 .rs-entry-title{font-weight:700;color:#0f172a;}
+.rs-t4 .rs-entry-org{color:#64748b;}
+.rs-t4 .rs-meta{font-size:11px;color:var(--a);font-weight:600;}
+.rs-t4 .rs-text{font-size:12.5px;}
+.rs-t4 .rs-pre{white-space:pre-line;}
+.rs-t4 .rs-bullets{padding-left:16px;font-size:12.5px;margin:4px 0;}
+.rs-t4 .rs-pills{display:none;}
+.rs-t4 .rs-list{padding-left:16px;font-size:12.5px;}
+.rs-t4 .rs-tag-inline{font-size:11px;color:#64748b;}
+</style>
+<div class="rs-t4">
+<table><tr>
+<td class="rs-side">
+    <div class="rs-side-inner">
+        {% if resume.photo %}<img src="{{ resume.photo.url }}" class="rs-photo" alt="">{% endif %}
+        <h1>{{ resume.full_name }}</h1>
+        <p class="rs-role">{{ resume.title }}</p>
+        <h3 class="rs-side-h3">Contact</h3>
+        {% include 'resumes/includes/resume_head_contact.html' %}
+        {% if resume.skills.all %}
+        <h3 class="rs-side-h3">Skills</h3>
+        {% for s in resume.skills.all %}<span class="rs-skill-item">{{ s.name }}</span>{% endfor %}
+        {% endif %}
+        {% if resume.languages.all %}
+        <h3 class="rs-side-h3">Languages</h3>
+        {% for l in resume.languages.all %}<p>{{ l.name }} · {{ l.get_proficiency_display }}</p>{% endfor %}
+        {% endif %}
+        {% if resume.certificates.all %}
+        <h3 class="rs-side-h3">Certificates</h3>
+        {% for c in resume.certificates.all %}<p>{{ c.name }}</p>{% endfor %}
+        {% endif %}
+    </div>
+</td>
+<td class="rs-main">
+    {% include 'resumes/includes/resume_content.html' with hide_skills=True hide_languages=True hide_certificates=True %}
+</td>
+</tr></table>
 </div>
+{% endwith %}
+{% else %}<p class="text-sm text-slate-500">No resume data.</p>{% endif %}
+{% if for_pdf %}</body></html>{% endif %}

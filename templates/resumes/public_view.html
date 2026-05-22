@@ -1,0 +1,6 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-[210mm] mx-auto card p-6 bg-white">
+    {% include template_name with accent_color=resume.accent_color font_family=resume.font_family %}
+</div>
+{% endblock %}

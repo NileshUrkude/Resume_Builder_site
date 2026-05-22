@@ -1,0 +1,95 @@
+{% if resume.summary and hide_summary != True %}
+<section class="rs-section">
+    <h2 class="rs-h2">{{ section_summary|default:"Summary" }}</h2>
+    <p class="rs-text rs-summary">{{ resume.summary }}</p>
+</section>
+{% endif %}
+
+{% if resume.experiences.all and hide_experience != True %}
+<section class="rs-section">
+    <h2 class="rs-h2">{{ section_experience|default:"Experience" }}</h2>
+    {% for ex in resume.experiences.all %}
+    <div class="rs-entry">
+        <div class="rs-entry-head">
+            <span class="rs-entry-title">{{ ex.job_title }}</span>
+            <span class="rs-entry-org">{{ ex.company }}</span>
+        </div>
+        {% if ex.date_range %}<div class="rs-meta">{{ ex.date_range }}</div>{% endif %}
+        {% if ex.bullet_points %}
+        <ul class="rs-bullets">{% for b in ex.bullet_points %}<li>{{ b }}</li>{% endfor %}</ul>
+        {% elif ex.description %}<p class="rs-text rs-pre">{{ ex.description }}</p>{% endif %}
+    </div>
+    {% endfor %}
+</section>
+{% endif %}
+
+{% if resume.educations.all and hide_education != True %}
+<section class="rs-section">
+    <h2 class="rs-h2">{{ section_education|default:"Education" }}</h2>
+    {% for e in resume.educations.all %}
+    <div class="rs-entry">
+        <div class="rs-entry-head">
+            <span class="rs-entry-title">{{ e.degree }}</span>
+            <span class="rs-entry-org">{{ e.college }}{% if e.location %} · {{ e.location }}{% endif %}</span>
+        </div>
+        {% if e.date_range %}<div class="rs-meta">{{ e.date_range }}</div>{% endif %}
+    </div>
+    {% endfor %}
+</section>
+{% endif %}
+
+{% if resume.projects.all and hide_projects != True %}
+<section class="rs-section">
+    <h2 class="rs-h2">{{ section_projects|default:"Projects" }}</h2>
+    {% for p in resume.projects.all %}
+    <div class="rs-entry">
+        <div class="rs-entry-head">
+            <span class="rs-entry-title">{{ p.name }}</span>
+            {% if p.tech_stack %}<span class="rs-tag-inline">{{ p.tech_stack }}</span>{% endif %}
+        </div>
+        {% if p.bullet_points %}
+        <ul class="rs-bullets">{% for b in p.bullet_points %}<li>{{ b }}</li>{% endfor %}</ul>
+        {% elif p.description %}<p class="rs-text rs-pre">{{ p.description }}</p>{% endif %}
+    </div>
+    {% endfor %}
+</section>
+{% endif %}
+
+{% if resume.skills.all and hide_skills != True %}
+<section class="rs-section">
+    <h2 class="rs-h2">{{ section_skills|default:"Skills" }}</h2>
+    <div class="rs-pills">
+        {% for s in resume.skills.all %}
+        <span class="rs-pill">{{ s.name }}{% if s.level %} <em class="rs-pill-lvl">{{ s.get_level_display }}</em>{% endif %}</span>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% if resume.certificates.all and hide_certificates != True %}
+<section class="rs-section">
+    <h2 class="rs-h2">{{ section_certificates|default:"Certifications" }}</h2>
+    <ul class="rs-list">{% for c in resume.certificates.all %}<li>{{ c.name }}</li>{% endfor %}</ul>
+</section>
+{% endif %}
+
+{% if resume.achievements.all %}
+<section class="rs-section">
+    <h2 class="rs-h2">{{ section_achievements|default:"Achievements" }}</h2>
+    <ul class="rs-list">{% for a in resume.achievements.all %}<li>{{ a.title }}</li>{% endfor %}</ul>
+</section>
+{% endif %}
+
+{% if resume.languages.all and hide_languages != True %}
+<section class="rs-section">
+    <h2 class="rs-h2">{{ section_languages|default:"Languages" }}</h2>
+    <p class="rs-text">{% for l in resume.languages.all %}{{ l.name }} <span class="rs-meta">({{ l.get_proficiency_display }})</span>{% if not forloop.last %} · {% endif %}{% endfor %}</p>
+</section>
+{% endif %}
+
+{% if resume.hobbies.all %}
+<section class="rs-section">
+    <h2 class="rs-h2">{{ section_hobbies|default:"Interests" }}</h2>
+    <p class="rs-text">{% for h in resume.hobbies.all %}{{ h.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+</section>
+{% endif %}
