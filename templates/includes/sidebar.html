@@ -1,0 +1,38 @@
+<aside id="app-sidebar" class="app-sidebar no-print" aria-label="Resume navigation">
+    <div class="sidebar-header">
+        <div class="sidebar-header-icon"><i class="bi bi-folder2-open"></i></div>
+        <div class="sidebar-header-text">
+            <p class="sidebar-header-label">Workspace</p>
+            <p class="sidebar-header-title">Resume tools</p>
+        </div>
+    </div>
+
+    <nav class="sidebar-nav">
+        <div class="sidebar-section">
+            <p class="nav-label">Resume</p>
+            <ul>
+                <li><a href="{% url 'dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}sidebar-link-active{% endif %}"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a></li>
+                <li><a href="{% url 'create_resume' %}" class="sidebar-link {% if request.resolver_match.url_name == 'edit_resume' or request.resolver_match.url_name == 'create_resume' %}sidebar-link-active{% endif %}"><i class="bi bi-pencil-square"></i> Edit resume</a></li>
+                <li><a href="{% url 'template_gallery' %}" class="sidebar-link {% if request.resolver_match.url_name == 'template_gallery' %}sidebar-link-active{% endif %}"><i class="bi bi-layout-text-window-reverse"></i> Templates</a></li>
+                {% if active_resume %}
+                <li><a href="{% url 'view_resume' active_resume.pk active_template %}" class="sidebar-link {% if request.resolver_match.url_name == 'view_resume' %}sidebar-link-active{% endif %}"><i class="bi bi-eye"></i> Preview</a></li>
+                <li><a href="{% url 'download_pdf' active_resume.pk active_template %}" class="sidebar-link"><i class="bi bi-download"></i> Download PDF</a></li>
+                {% endif %}
+            </ul>
+        </div>
+        <div class="sidebar-section">
+            <p class="nav-label">Manage</p>
+            <ul>
+                <li><a href="{% url 'new_resume' %}" class="sidebar-link {% if request.resolver_match.url_name == 'new_resume' %}sidebar-link-active{% endif %}"><i class="bi bi-plus-circle"></i> New resume</a></li>
+                <li><a href="{% url 'my_resumes' %}" class="sidebar-link {% if request.resolver_match.url_name == 'my_resumes' %}sidebar-link-active{% endif %}"><i class="bi bi-collection"></i> My resumes</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    {% if active_resume %}
+    <div class="sidebar-footer">
+        <p class="sidebar-footer-label">Active resume</p>
+        <p class="sidebar-footer-name">{{ active_resume.resume_name }}</p>
+    </div>
+    {% endif %}
+</aside>

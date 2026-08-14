@@ -5,14 +5,11 @@ from django.db import models
 from django.utils import timezone
 
 TEMPLATE_CHOICES = [
-    ('t1', 'Classic'),
-    ('t2', 'Modern'),
-    ('t3', 'Minimal'),
-    ('t4', 'Sidebar'),
-    ('t5', 'Timeline'),
-    ('t6', 'Compact'),
-    ('t7', 'Academic'),
-    ('t8', 'Creative'),
+    ('t1', 'Executive Navy'),
+    ('t1s', 'Ocean Teal'),
+    ('t2s', 'Plum Sidebar'),
+    ('t3s', 'Crimson Pro'),
+    ('t4s', 'Slate & Sky'),
 ]
 
 FONT_CHOICES = [

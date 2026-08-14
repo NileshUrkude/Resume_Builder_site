@@ -1,0 +1,46 @@
+{% if for_pdf %}<!DOCTYPE html><html><head><meta charset="utf-8"><style>@page { size: A4; margin: 10mm; } html,body{margin:0;padding:0;} .a4{width:210mm;min-height:297mm;margin:0 auto;box-sizing:border-box;} </style></head><body><div class="a4">{% endif %}
+{% if resume %}
+{% with t=theme font=font_family|default:"Georgia" %}
+<style>
+.rs-t1{font-family:{{ font }},Georgia,serif;font-size:10px;line-height:1.45;color:{{ t.text }};width:210mm;box-sizing:border-box;margin:0 auto;background:{{ t.light }};}
+.rs-t1 .rs-top{background:{{ t.header_bg }};color:{{ t.header_text }};padding:14px 16px;text-align:center;}
+.rs-t1 .rs-top h1{font-size:22px;font-weight:700;margin:0 0 4px;color:{{ t.header_text }};}
+.rs-t1 .rs-top .rs-role{font-size:12px;color:{{ t.accent }};margin:0 0 8px;font-weight:600;}
+.rs-t1 .rs-top .rs-contact{font-size:9px;color:#e2e8f0;line-height:1.6;}
+.rs-t1 .rs-top .rs-contact a{color:#e2e8f0;text-decoration:none;}
+.rs-t1 .rs-body{padding:10px 14px;}
+.rs-t1 .rs-rule{height:2px;background:{{ t.accent }};margin:0 0 10px;}
+.rs-t1 .rs-h2{font-size:9px;font-weight:700;text-transform:uppercase;color:{{ t.primary }};border-bottom:1px solid {{ t.accent }};padding-bottom:3px;margin:0 0 7px;}
+.rs-t1 .rs-section{margin-bottom:9px;}
+.rs-t1 .rs-entry{margin-bottom:6px;}
+.rs-t1 .rs-entry-title{font-weight:700;color:{{ t.primary }};font-size:10.5px;display:block;}
+.rs-t1 .rs-entry-org{color:{{ t.muted }};font-size:10px;display:block;}
+.rs-t1 .rs-meta{font-size:8.5px;color:{{ t.muted }};font-style:italic;}
+.rs-t1 .rs-text{font-size:10px;color:{{ t.text }};margin:0;}
+.rs-t1 .rs-bullets{margin:2px 0 0;padding-left:14px;font-size:9.5px;}
+.rs-t1 .rs-bullets li{margin-bottom:1px;}
+.rs-t1 .rs-pill{display:inline-block;background:{{ t.pill_bg }};border:1px solid {{ t.pill_border }};color:{{ t.primary }};padding:2px 8px;border-radius:10px;font-size:8.5px;margin:0 2px 2px 0;}
+.rs-t1 .rs-list{margin:0;padding-left:14px;font-size:9.5px;}
+.rs-t1 .rs-photo{width:58px;height:58px;border:2px solid {{ t.accent }};}
+.rs-t1 img{max-width:100%;height:auto;}
+</style>
+<div class="rs-t1">
+<table width="100%" cellpadding="0" cellspacing="0"><tr>
+<td class="rs-top">
+    <table width="100%"><tr>
+    <td align="center">
+        <h1>{{ resume.full_name }}</h1>
+        <p class="rs-role">{{ resume.title }}</p>
+        <div class="rs-contact">{{ resume.email }}{% if resume.phone %} · {{ resume.phone }}{% endif %}{% if resume.github %} · {{ resume.github }}{% endif %}{% if resume.linkedin %} · {{ resume.linkedin }}{% endif %}</div>
+    </td>
+    {% if photo_url %}<td width="62" align="right" valign="middle"><img src="{{ photo_url }}" class="rs-photo" alt=""></td>{% endif %}
+    </tr></table>
+</td>
+</tr></table>
+<div class="rs-body"><div class="rs-rule"></div>
+{% include 'resumes/includes/resume_content.html' %}
+</div>
+</div>
+{% endwith %}
+{% else %}<p>No resume data.</p>{% endif %}
+{% if for_pdf %}</div></body></html>{% endif %}

@@ -1,0 +1,11 @@
+<nav class="mobile-resume-nav no-print lg:hidden" aria-label="Resume navigation">
+    <a href="{% url 'dashboard' %}" class="mobile-nav-link {% if request.resolver_match.url_name == 'dashboard' %}mobile-nav-link-active{% endif %}"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+    <a href="{% url 'create_resume' %}" class="mobile-nav-link {% if request.resolver_match.url_name == 'edit_resume' or request.resolver_match.url_name == 'create_resume' %}mobile-nav-link-active{% endif %}"><i class="bi bi-pencil-square"></i> Edit</a>
+    <a href="{% url 'template_gallery' %}" class="mobile-nav-link {% if request.resolver_match.url_name == 'template_gallery' %}mobile-nav-link-active{% endif %}"><i class="bi bi-layout-text-window-reverse"></i> Templates</a>
+    <a href="{% url 'my_resumes' %}" class="mobile-nav-link {% if request.resolver_match.url_name == 'my_resumes' %}mobile-nav-link-active{% endif %}"><i class="bi bi-collection"></i> Resumes</a>
+    {% if active_resume %}
+    <a href="{% url 'view_resume' active_resume.pk active_template %}" class="mobile-nav-link {% if request.resolver_match.url_name == 'view_resume' %}mobile-nav-link-active{% endif %}"><i class="bi bi-eye"></i> Preview</a>
+    <a href="{% url 'download_pdf' active_resume.pk active_template %}" class="mobile-nav-link"><i class="bi bi-download"></i> PDF</a>
+    {% endif %}
+    <a href="{% url 'new_resume' %}" class="mobile-nav-link {% if request.resolver_match.url_name == 'new_resume' %}mobile-nav-link-active{% endif %}"><i class="bi bi-plus-circle"></i> New</a>
+</nav>

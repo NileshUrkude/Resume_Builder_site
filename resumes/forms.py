@@ -22,7 +22,6 @@ INPUT_CLASS = (
     'dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100'
 )
 TEXTAREA_CLASS = INPUT_CLASS + ' min-h-[88px]'
-LABEL_CLASS = 'block text-sm font-medium text-slate-700 dark:text-slate-300'
 DATE_CLASS = INPUT_CLASS + ' max-w-xs'
 
 
@@ -67,35 +66,40 @@ class OptionalRowFormSet(BaseModelFormSet):
 
 
 class ResumeForm(TailwindModelForm):
-    share_password_plain = forms.CharField(
+    share_password_input = forms.CharField(
         required=False,
-        label='Share password (optional)',
-        widget=forms.PasswordInput(attrs={'class': INPUT_CLASS, 'autocomplete': 'new-password'}),
+        label='Share password',
+        help_text='Optional. Leave blank to keep current or remove protection.',
+        widget=forms.PasswordInput(attrs={'class': INPUT_CLASS, 'autocomplete': 'new-password', 'placeholder': 'Set or change password'}),
     )
 
     class Meta:
         model = Resume
         fields = [
-            'resume_name', 'photo', 'title', 'full_name', 'email', 'phone', 'summary',
-            'github', 'linkedin', 'preferred_template', 'accent_color', 'font_family',
-            'is_public', 'share_expires_at',
+            'resume_name', 'full_name', 'title', 'email', 'phone', 'summary', 'photo',
+            'github', 'linkedin', 'preferred_template', 'accent_color', 'font_family', 'is_public',
         ]
         widgets = {
-            'summary': forms.Textarea(attrs={'rows': 4, 'id': 'id_summary'}),
+            'summary': forms.Textarea(attrs={'rows': 3, 'id': 'id_summary', 'placeholder': 'Brief professional summary'}),
             'accent_color': forms.TextInput(attrs={'type': 'color'}),
-            'share_expires_at': forms.DateTimeInput(
-                attrs={'type': 'datetime-local', 'class': INPUT_CLASS},
-                format='%Y-%m-%dT%H:%M',
-            ),
+            'photo': forms.ClearableFileInput(attrs={'class': INPUT_CLASS}),
             'is_public': forms.CheckboxInput(),
+            'preferred_template': forms.Select(attrs={'class': INPUT_CLASS}),
             'github': forms.URLInput(attrs={'placeholder': 'https://github.com/username'}),
             'linkedin': forms.URLInput(attrs={'placeholder': 'https://linkedin.com/in/username'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['share_expires_at'].required = False
-        self.fields['share_expires_at'].input_formats = ['%Y-%m-%dT%H:%M', '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M']
+        self.fields['preferred_template'].choices = [
+            ('t1', 'Executive Navy — gold & navy classic'),
+            ('t1s', 'Ocean Teal — mint minimal stack'),
+            ('t2s', 'Plum Sidebar — purple panel layout'),
+            ('t3s', 'Crimson Pro — red timeline columns'),
+            ('t4s', 'Slate & Sky — dark header modern'),
+        ]
+        if self.instance and self.instance.pk and self.instance.share_password:
+            self.fields['share_password_input'].help_text = 'Password is set. Enter a new one to change, or leave blank to keep it.'
 
     def clean_github(self):
         val = self.cleaned_data.get('github') or ''
@@ -223,12 +227,6 @@ class ProfileForm(forms.ModelForm):
             'last_name': forms.TextInput(attrs={'class': INPUT_CLASS}),
         }
 
-
-class JobDescriptionForm(forms.Form):
-    job_description = forms.CharField(
-        widget=forms.Textarea(attrs={'class': TEXTAREA_CLASS, 'rows': 10}),
-        label='Job description',
-    )
 
 
 class SharePasswordForm(forms.Form):

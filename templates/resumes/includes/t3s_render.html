@@ -1,0 +1,50 @@
+{% if for_pdf %}<!DOCTYPE html><html><head><meta charset="utf-8"><style>@page { size: A4; margin: 8mm; } html,body{margin:0;padding:0;} .a4{width:210mm;min-height:297mm;margin:0 auto;box-sizing:border-box;} table{border-collapse:collapse;} </style></head><body><div class="a4">{% endif %}
+{% if resume %}
+{% with t=theme font=font_family|default:"Arial" %}
+<style>
+.rs-t3s{font-family:{{ font }},Arial,sans-serif;font-size:9px;line-height:1.35;color:{{ t.text }};width:210mm;box-sizing:border-box;margin:0 auto;background:#fff;}
+.rs-t3s .rs-head{padding:8px 10px 6px;border-left:6px solid {{ t.stripe }};background:{{ t.light }};margin-bottom:8px;}
+.rs-t3s h1{font-size:18px;font-weight:800;color:{{ t.primary }};margin:0 0 2px;}
+.rs-t3s .rs-role{font-size:10px;font-weight:600;color:{{ t.accent }};margin:0 0 5px;}
+.rs-t3s .rs-contact{font-size:8.5px;color:{{ t.muted }};}
+.rs-t3s .rs-cols{width:100%;border-collapse:collapse;}
+.rs-t3s .rs-col{vertical-align:top;width:50%;padding-right:6px;}
+.rs-t3s .rs-col-r{padding-right:0;padding-left:6px;border-left:1px solid {{ t.pill_border }};}
+.rs-t3s .rs-section{margin-bottom:6px;padding-left:8px;border-left:2px solid {{ t.stripe }};}
+.rs-t3s .rs-h2{font-size:8px;font-weight:700;text-transform:uppercase;color:{{ t.primary }};margin:0 0 4px;}
+.rs-t3s .rs-entry{margin-bottom:4px;}
+.rs-t3s .rs-entry-title{font-weight:700;color:{{ t.text }};font-size:9.5px;display:block;}
+.rs-t3s .rs-entry-org{color:{{ t.muted }};font-size:9px;display:block;}
+.rs-t3s .rs-meta{font-size:8px;color:{{ t.accent }};font-weight:600;}
+.rs-t3s .rs-text{font-size:9px;margin:0;}
+.rs-t3s .rs-bullets{margin:1px 0 0;padding-left:10px;font-size:8.5px;}
+.rs-t3s .rs-pill{display:inline-block;background:{{ t.pill_bg }};border:1px solid {{ t.pill_border }};color:{{ t.primary }};padding:1px 5px;border-radius:8px;font-size:8px;margin:0 2px 2px 0;}
+.rs-t3s .rs-list{margin:0;padding-left:10px;font-size:8.5px;}
+.rs-t3s .rs-photo{width:48px;height:48px;border:2px solid {{ t.primary }};}
+</style>
+<div class="rs-t3s">
+<div class="rs-head">
+<table width="100%"><tr>
+<td><h1>{{ resume.full_name }}</h1><p class="rs-role">{{ resume.title }}</p>{% include 'resumes/includes/resume_head_contact.html' %}</td>
+{% if photo_url %}<td width="52" align="right"><img src="{{ photo_url }}" class="rs-photo" alt=""></td>{% endif %}
+</tr></table>
+</div>
+{% if resume.summary %}<div class="rs-section" style="margin-bottom:8px;padding-left:8px;border-left:2px solid {{ t.stripe }};"><h2 class="rs-h2">Summary</h2><p class="rs-text">{{ resume.summary }}</p></div>{% endif %}
+<table class="rs-cols"><tr>
+<td class="rs-col">
+{% if resume.experiences.all %}<div class="rs-section"><h2 class="rs-h2">Experience</h2>{% for ex in resume.experiences.all %}<div class="rs-entry"><span class="rs-entry-title">{{ ex.job_title }}</span><span class="rs-entry-org">{{ ex.company }}</span>{% if ex.date_range %}<div class="rs-meta">{{ ex.date_range }}</div>{% endif %}{% if ex.bullet_points %}<ul class="rs-bullets">{% for b in ex.bullet_points %}<li>{{ b }}</li>{% endfor %}</ul>{% elif ex.description %}<p class="rs-text">{{ ex.description }}</p>{% endif %}</div>{% endfor %}</div>{% endif %}
+{% if resume.educations.all %}<div class="rs-section"><h2 class="rs-h2">Education</h2>{% for e in resume.educations.all %}<div class="rs-entry"><span class="rs-entry-title">{{ e.degree }}</span><span class="rs-entry-org">{{ e.college }}</span>{% if e.date_range %}<div class="rs-meta">{{ e.date_range }}</div>{% endif %}</div>{% endfor %}</div>{% endif %}
+{% if resume.projects.all %}<div class="rs-section"><h2 class="rs-h2">Projects</h2>{% for p in resume.projects.all %}<div class="rs-entry"><span class="rs-entry-title">{{ p.name }}</span>{% if p.description %}<p class="rs-text">{{ p.description|truncatewords:20 }}</p>{% endif %}</div>{% endfor %}</div>{% endif %}
+</td>
+<td class="rs-col rs-col-r">
+{% if resume.skills.all %}<div class="rs-section"><h2 class="rs-h2">Skills</h2><div>{% for s in resume.skills.all %}<span class="rs-pill">{{ s.name }}</span>{% endfor %}</div></div>{% endif %}
+{% if resume.certificates.all %}<div class="rs-section"><h2 class="rs-h2">Certifications</h2><ul class="rs-list">{% for c in resume.certificates.all %}<li>{{ c.name }}</li>{% endfor %}</ul></div>{% endif %}
+{% if resume.languages.all %}<div class="rs-section"><h2 class="rs-h2">Languages</h2><ul class="rs-list">{% for l in resume.languages.all %}<li>{{ l.name }}</li>{% endfor %}</ul></div>{% endif %}
+{% if resume.achievements.all %}<div class="rs-section"><h2 class="rs-h2">Achievements</h2><ul class="rs-list">{% for a in resume.achievements.all %}<li>{{ a.title }}</li>{% endfor %}</ul></div>{% endif %}
+{% if resume.hobbies.all %}<div class="rs-section"><h2 class="rs-h2">Interests</h2><p class="rs-text">{% for h in resume.hobbies.all %}{{ h.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p></div>{% endif %}
+</td>
+</tr></table>
+</div>
+{% endwith %}
+{% else %}<p>No resume data.</p>{% endif %}
+{% if for_pdf %}</div></body></html>{% endif %}

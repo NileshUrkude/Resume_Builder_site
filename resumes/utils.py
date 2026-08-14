@@ -1,39 +1,167 @@
-import io
-import re
-from collections import Counter
-
 from django.contrib.auth.hashers import check_password, make_password
-from django.db import transaction
 from django.http import HttpResponse
 from django.template.loader import render_to_string
-from django.utils import timezone
+try:
+    from playwright.sync_api import sync_playwright
+    _HAS_PLAYWRIGHT = True
+except Exception:
+    _HAS_PLAYWRIGHT = False
+
+try:
+    from weasyprint import HTML, CSS
+    _HAS_WEASY = True
+except Exception:
+    _HAS_WEASY = False
+
 from xhtml2pdf import pisa
 
-from .models import (
-    Achievement,
-    Certificate,
-    Education,
-    Experience,
-    Hobby,
-    Language,
-    Project,
-    Resume,
-    ResumeEvent,
-    Skill,
-)
+from .models import Resume
 
 TEMPLATE_MAP = {
     't1': 'resumes/t1.html',
-    't2': 'resumes/t2.html',
-    't3': 'resumes/t3.html',
-    't4': 'resumes/t4.html',
-    't5': 'resumes/t5.html',
-    't6': 'resumes/t6.html',
-    't7': 'resumes/t7.html',
-    't8': 'resumes/t8.html',
+    't1s': 'resumes/t1s.html',
+    't2s': 'resumes/t2s.html',
+    't3s': 'resumes/t3s.html',
+    't4s': 'resumes/t4s.html',
 }
 
 VALID_TEMPLATES = frozenset(TEMPLATE_MAP.keys())
+
+SINGLE_PAGE_TEMPLATES = frozenset({'t1', 't1s', 't2s', 't3s', 't4s'})
+
+TEMPLATE_LABELS = {
+    't1': 'Executive Navy',
+    't1s': 'Ocean Teal',
+    't2s': 'Plum Sidebar',
+    't3s': 'Crimson Pro',
+    't4s': 'Slate & Sky',
+}
+
+# Fixed palette per template — each design looks distinct regardless of user accent pick.
+TEMPLATE_THEMES = {
+    't1': {
+        'primary': '#1e3a5f',
+        'accent': '#c9a227',
+        'text': '#1e293b',
+        'muted': '#64748b',
+        'light': '#faf8f5',
+        'pill_bg': '#eef2f7',
+        'pill_border': '#cbd5e1',
+        'header_bg': '#1e3a5f',
+        'header_text': '#ffffff',
+    },
+    't1s': {
+        'primary': '#0f766e',
+        'accent': '#14b8a6',
+        'text': '#134e4a',
+        'muted': '#5eead4',
+        'light': '#f0fdfa',
+        'pill_bg': '#ccfbf1',
+        'pill_border': '#99f6e4',
+        'header_bg': '#0f766e',
+        'header_text': '#ffffff',
+    },
+    't2s': {
+        'primary': '#5b21b6',
+        'accent': '#a78bfa',
+        'text': '#1e1b4b',
+        'muted': '#6b7280',
+        'light': '#faf5ff',
+        'pill_bg': '#ede9fe',
+        'pill_border': '#c4b5fd',
+        'sidebar_bg': '#4c1d95',
+        'sidebar_text': '#f5f3ff',
+    },
+    't3s': {
+        'primary': '#b91c1c',
+        'accent': '#ef4444',
+        'text': '#1f2937',
+        'muted': '#6b7280',
+        'light': '#fef2f2',
+        'pill_bg': '#fee2e2',
+        'pill_border': '#fecaca',
+        'stripe': '#dc2626',
+    },
+    't4s': {
+        'primary': '#0f172a',
+        'accent': '#0ea5e9',
+        'text': '#334155',
+        'muted': '#64748b',
+        'light': '#f0f9ff',
+        'pill_bg': '#e0f2fe',
+        'pill_border': '#7dd3fc',
+        'header_bg': '#0f172a',
+        'header_text': '#ffffff',
+    },
+}
+
+
+def normalize_template(template):
+    return template if template in VALID_TEMPLATES else 't1'
+
+
+def is_single_page(template):
+    return normalize_template(template) in SINGLE_PAGE_TEMPLATES
+
+
+def _resume_context(resume, request=None, template='t1'):
+    tpl = normalize_template(template)
+    theme = TEMPLATE_THEMES.get(tpl, TEMPLATE_THEMES['t1'])
+    font = resume.font_family or 'Arial'
+    photo_url = ''
+    if resume.photo:
+        url = resume.photo.url
+        photo_url = request.build_absolute_uri(url) if request else url
+    return {
+        'resume': resume,
+        'accent_color': theme['primary'],
+        'font_family': font,
+        'photo_url': photo_url,
+        'theme': theme,
+        'tpl': tpl,
+    }
+
+
+def render_resume_html(resume, template, for_pdf=False, request=None):
+    tpl = normalize_template(template)
+    ctx = _resume_context(resume, request, template=tpl)
+    ctx['for_pdf'] = for_pdf
+    ctx['single_page'] = is_single_page(tpl)
+    return render_to_string(TEMPLATE_MAP[tpl], ctx)
+
+
+def pdf_response(resume, template, filename='resume.pdf', request=None):
+    html = render_resume_html(resume, template, for_pdf=True, request=request)
+    # Prefer Playwright (Chromium) for pixel-perfect browser rendering
+    if _HAS_PLAYWRIGHT:
+        base_url = request.build_absolute_uri('/') if request else None
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            page = browser.new_page()
+            # Use base URL so relative asset URLs resolve
+            if base_url:
+                page.set_content(html, wait_until='networkidle', base_url=base_url)
+            else:
+                page.set_content(html, wait_until='networkidle')
+            pdf_bytes = page.pdf(format='A4', margin={'top':'10mm','bottom':'10mm','left':'10mm','right':'10mm'}, print_background=True)
+            browser.close()
+        response = HttpResponse(pdf_bytes, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+
+    # Next prefer WeasyPrint
+    if _HAS_WEASY:
+        base_url = request.build_absolute_uri('/') if request else None
+        pdf_bytes = HTML(string=html, base_url=base_url).write_pdf(stylesheets=[CSS(string='@page { size: A4; margin: 10mm }')])
+        response = HttpResponse(pdf_bytes, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+
+    # Fallback to xhtml2pdf
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    pisa.CreatePDF(src=html, dest=response, encoding='utf-8')
+    return response
 
 
 def get_user_resume(request, resume_id=None):
@@ -52,11 +180,6 @@ def set_active_resume(request, resume):
     request.session['active_resume_id'] = resume.pk
 
 
-def track_event(resume, event_type, template=''):
-    if resume:
-        ResumeEvent.objects.create(resume=resume, event_type=event_type, template=template)
-
-
 def set_share_password(resume, raw_password):
     if raw_password:
         resume.share_password = make_password(raw_password)
@@ -68,278 +191,6 @@ def check_share_password(resume, raw_password):
     if not resume.share_password:
         return True
     return check_password(raw_password, resume.share_password)
-
-
-@transaction.atomic
-def duplicate_resume(source: Resume, new_name=None):
-    clone = Resume.objects.create(
-        user=source.user,
-        resume_name=new_name or f'{source.resume_name} (Copy)',
-        is_public=False,
-        preferred_template=source.preferred_template,
-        accent_color=source.accent_color,
-        font_family=source.font_family,
-        title=source.title,
-        full_name=source.full_name,
-        email=source.email,
-        phone=source.phone,
-        summary=source.summary,
-        github=source.github,
-        linkedin=source.linkedin,
-    )
-    if source.photo:
-        clone.photo = source.photo
-        clone.save(update_fields=['photo'])
-
-    for edu in source.educations.all():
-        Education.objects.create(
-            resume=clone, degree=edu.degree, college=edu.college, location=edu.location,
-            start_date=edu.start_date, end_date=edu.end_date, duration=edu.duration, order=edu.order,
-        )
-    for exp in source.experiences.all():
-        Experience.objects.create(
-            resume=clone, job_title=exp.job_title, company=exp.company,
-            start_date=exp.start_date, end_date=exp.end_date, duration=exp.duration,
-            description=exp.description, order=exp.order,
-        )
-    for proj in source.projects.all():
-        Project.objects.create(
-            resume=clone, name=proj.name, description=proj.description,
-            tech_stack=proj.tech_stack, order=proj.order,
-        )
-    for sk in source.skills.all():
-        Skill.objects.create(resume=clone, name=sk.name, level=sk.level, order=sk.order)
-    for cert in source.certificates.all():
-        Certificate.objects.create(resume=clone, name=cert.name, order=cert.order)
-    for ach in source.achievements.all():
-        Achievement.objects.create(resume=clone, title=ach.title, order=ach.order)
-    for lang in source.languages.all():
-        Language.objects.create(resume=clone, name=lang.name, proficiency=lang.proficiency, order=lang.order)
-    for hobby in source.hobbies.all():
-        Hobby.objects.create(resume=clone, name=hobby.name, order=hobby.order)
-    return clone
-
-
-def generate_summary(resume: Resume) -> str:
-    """Rule-based professional summary (no external API)."""
-    roles = [e.job_title for e in resume.experiences.all()[:3]]
-    skills = [s.name for s in resume.skills.all()[:8]]
-    parts = []
-    if roles:
-        parts.append(f'Experienced professional with background as {", ".join(roles)}.')
-    if resume.summary:
-        parts.append(resume.summary.strip())
-    elif resume.projects.exists():
-        parts.append(f'Built projects including {resume.projects.first().name}.')
-    if skills:
-        parts.append(f'Skilled in {", ".join(skills)}.')
-    return ' '.join(parts)[:600] or 'Motivated professional seeking new opportunities.'
-
-
-def compute_ats_score(resume: Resume) -> dict:
-    """Simple ATS checklist scoring."""
-    checks = []
-    score = 0
-    max_score = 100
-
-    if resume.full_name and len(resume.full_name) >= 3:
-        checks.append({'ok': True, 'text': 'Full name present'})
-        score += 10
-    else:
-        checks.append({'ok': False, 'text': 'Add your full name'})
-
-    if resume.email and '@' in resume.email:
-        checks.append({'ok': True, 'text': 'Email present'})
-        score += 10
-    else:
-        checks.append({'ok': False, 'text': 'Add a professional email'})
-
-    if resume.phone:
-        checks.append({'ok': True, 'text': 'Phone number present'})
-        score += 10
-    else:
-        checks.append({'ok': False, 'text': 'Add phone number'})
-
-    summary_len = len(resume.summary or '')
-    if 80 <= summary_len <= 600:
-        checks.append({'ok': True, 'text': 'Summary length is ATS-friendly (80–600 chars)'})
-        score += 15
-    elif summary_len > 0:
-        checks.append({'ok': False, 'text': f'Summary is {summary_len} chars — aim for 80–600'})
-        score += 5
-    else:
-        checks.append({'ok': False, 'text': 'Add a professional summary'})
-
-    if resume.experiences.exists():
-        checks.append({'ok': True, 'text': 'Experience section filled'})
-        score += 20
-    else:
-        checks.append({'ok': False, 'text': 'Add at least one experience'})
-
-    if resume.skills.count() >= 5:
-        checks.append({'ok': True, 'text': f'{resume.skills.count()} skills listed (good)'})
-        score += 15
-    elif resume.skills.exists():
-        checks.append({'ok': False, 'text': 'Add more skills (target 5+)'})
-        score += 8
-    else:
-        checks.append({'ok': False, 'text': 'Add skills section'})
-
-    if resume.educations.exists():
-        checks.append({'ok': True, 'text': 'Education section present'})
-        score += 10
-    else:
-        checks.append({'ok': False, 'text': 'Add education'})
-
-    if resume.linkedin or resume.github:
-        checks.append({'ok': True, 'text': 'Online profile links included'})
-        score += 10
-    else:
-        checks.append({'ok': False, 'text': 'Add LinkedIn or GitHub URL'})
-
-    word_count = len((resume.summary or '').split())
-    for exp in resume.experiences.all():
-        word_count += len(exp.description.split())
-    if word_count >= 150:
-        checks.append({'ok': True, 'text': 'Enough content for ATS parsing'})
-        score += 10
-    else:
-        checks.append({'ok': False, 'text': 'Expand descriptions (150+ words total)'})
-
-    return {
-        'score': min(score, max_score),
-        'max_score': max_score,
-        'checks': checks,
-        'grade': 'Excellent' if score >= 85 else 'Good' if score >= 70 else 'Needs work',
-    }
-
-
-def match_job_description(resume: Resume, jd_text: str) -> dict:
-    jd_words = set(re.findall(r'[a-zA-Z+#]{2,}', jd_text.lower()))
-    skill_names = {s.name.lower() for s in resume.skills.all()}
-    resume_words = skill_names.copy()
-    for exp in resume.experiences.all():
-        resume_words.update(re.findall(r'[a-zA-Z+#]{2,}', exp.description.lower()))
-        resume_words.update(re.findall(r'[a-zA-Z+#]{2,}', exp.job_title.lower()))
-    for proj in resume.projects.all():
-        resume_words.update(re.findall(r'[a-zA-Z+#]{2,}', proj.tech_stack.lower()))
-
-    common_tech = {
-        'python', 'django', 'javascript', 'react', 'java', 'sql', 'html', 'css',
-        'node', 'aws', 'docker', 'kubernetes', 'git', 'api', 'rest', 'mongodb',
-        'postgresql', 'excel', 'communication', 'leadership', 'agile', 'scrum',
-    }
-    jd_keywords = [w for w in jd_words if w in common_tech or len(w) > 4]
-    jd_keywords = list(dict.fromkeys(jd_keywords))[:40]
-
-    matched = [k for k in jd_keywords if k in resume_words]
-    missing = [k for k in jd_keywords if k not in resume_words][:20]
-
-    pct = int(len(matched) / len(jd_keywords) * 100) if jd_keywords else 0
-    return {
-        'match_percent': pct,
-        'matched': matched,
-        'missing': missing,
-        'suggestions': missing[:8],
-    }
-
-
-def render_resume_html(resume, template, for_pdf=False):
-    accent = resume.accent_color or '#4f46e5'
-    font = resume.font_family or 'Arial'
-    return render_to_string(
-        TEMPLATE_MAP.get(template, TEMPLATE_MAP['t1']),
-        {'resume': resume, 'for_pdf': for_pdf, 'accent_color': accent, 'font_family': font},
-    )
-
-
-def pdf_response(resume, template, filename='resume.pdf'):
-    html = render_resume_html(resume, template, for_pdf=True)
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
-    pisa.CreatePDF(html, dest=response)
-    return response
-
-
-def export_docx(resume, template='t1'):
-    from docx import Document
-    from docx.shared import Inches, Pt, RGBColor
-
-    doc = Document()
-    accent = resume.accent_color.lstrip('#')
-    try:
-        r = int(accent[0:2], 16)
-        g = int(accent[2:4], 16)
-        b = int(accent[4:6], 16)
-    except (ValueError, IndexError):
-        r, g, b = 79, 70, 229
-
-    title = doc.add_heading(resume.full_name, 0)
-    for run in title.runs:
-        run.font.color.rgb = RGBColor(r, g, b)
-
-    doc.add_paragraph(resume.title)
-    doc.add_paragraph(f'{resume.email} | {resume.phone}')
-    if resume.linkedin:
-        doc.add_paragraph(f'LinkedIn: {resume.linkedin}')
-    if resume.github:
-        doc.add_paragraph(f'GitHub: {resume.github}')
-
-    if resume.summary:
-        doc.add_heading('Summary', level=2)
-        doc.add_paragraph(resume.summary)
-
-    if resume.experiences.exists():
-        doc.add_heading('Experience', level=2)
-        for exp in resume.experiences.all():
-            p = doc.add_paragraph()
-            p.add_run(f'{exp.job_title} — {exp.company}').bold = True
-            doc.add_paragraph(exp.date_range())
-            for bullet in exp.bullet_points() or [exp.description]:
-                doc.add_paragraph(bullet, style='List Bullet')
-
-    if resume.educations.exists():
-        doc.add_heading('Education', level=2)
-        for edu in resume.educations.all():
-            doc.add_paragraph(f'{edu.degree} — {edu.college} ({edu.date_range()})')
-
-    if resume.projects.exists():
-        doc.add_heading('Projects', level=2)
-        for proj in resume.projects.all():
-            doc.add_paragraph(f'{proj.name} ({proj.tech_stack})')
-            doc.add_paragraph(proj.description)
-
-    if resume.skills.exists():
-        doc.add_heading('Skills', level=2)
-        skills_text = ', '.join(f'{s.name} ({s.get_level_display()})' for s in resume.skills.all())
-        doc.add_paragraph(skills_text)
-
-    if resume.languages.exists():
-        doc.add_heading('Languages', level=2)
-        doc.add_paragraph(', '.join(f'{l.name} ({l.get_proficiency_display()})' for l in resume.languages.all()))
-
-    if resume.hobbies.exists():
-        doc.add_heading('Hobbies', level=2)
-        doc.add_paragraph(', '.join(h.name for h in resume.hobbies.all()))
-
-    buffer = io.BytesIO()
-    doc.save(buffer)
-    buffer.seek(0)
-    response = HttpResponse(
-        buffer.read(),
-        content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    )
-    response['Content-Disposition'] = f'attachment; filename="{resume.resume_name.replace(" ", "_")}.docx"'
-    return response
-
-
-def qr_png_response(url: str):
-    import qrcode
-    img = qrcode.make(url)
-    buffer = io.BytesIO()
-    img.save(buffer, format='PNG')
-    buffer.seek(0)
-    return HttpResponse(buffer.read(), content_type='image/png')
 
 
 def save_ordered_formset(formset, resume, related_name, order_prefix):

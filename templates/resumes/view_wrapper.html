@@ -1,42 +1,38 @@
 {% extends 'base.html' %}
-{% block title %}Preview {{ selected_template|upper }}{% endblock %}
+{% block title %}Preview — {{ template_label }}{% endblock %}
+{% block page_heading %}Resume preview{% endblock %}
 {% block content %}
-{% if not resume %}<div class="card p-8 text-center"><a href="{% url 'new_resume' %}" class="btn-primary">Create resume</a></div>
-{% else %}
-<div class="print-layout grid gap-6 lg:grid-cols-12">
-    <aside class="no-print space-y-4 lg:col-span-4">
-        <div class="card p-4 space-y-2">
-            <a href="{% url 'edit_resume' resume.pk %}" class="block rounded-xl bg-amber-500 py-2 text-center text-sm font-semibold text-white">Edit</a>
-            <button onclick="window.print()" class="w-full rounded-xl border py-2 text-sm dark:border-slate-600">Print</button>
-            <a href="{% url 'download_pdf' resume.pk selected_template %}" class="block rounded-xl bg-emerald-600 py-2 text-center text-sm font-semibold text-white">PDF</a>
-            <a href="{% url 'download_docx' resume.pk %}" class="block rounded-xl bg-blue-600 py-2 text-center text-sm font-semibold text-white">DOCX</a>
-        </div>
-        <div class="card p-4">
-            <p class="text-xs text-slate-500 mb-2">Templates</p>
-            <a href="{% url 'view_resume' resume.pk 't1' %}" class="block rounded px-2 py-1 text-sm {% if selected_template == 't1' %}bg-indigo-100 dark:bg-indigo-950 font-semibold{% endif %}">T1</a>
-            <a href="{% url 'view_resume' resume.pk 't2' %}" class="block rounded px-2 py-1 text-sm {% if selected_template == 't2' %}bg-indigo-100 dark:bg-indigo-950 font-semibold{% endif %}">T2</a>
-            <a href="{% url 'view_resume' resume.pk 't3' %}" class="block rounded px-2 py-1 text-sm {% if selected_template == 't3' %}bg-indigo-100 dark:bg-indigo-950 font-semibold{% endif %}">T3</a>
-            <a href="{% url 'view_resume' resume.pk 't4' %}" class="block rounded px-2 py-1 text-sm {% if selected_template == 't4' %}bg-indigo-100 dark:bg-indigo-950 font-semibold{% endif %}">T4</a>
-            <a href="{% url 'view_resume' resume.pk 't5' %}" class="block rounded px-2 py-1 text-sm {% if selected_template == 't5' %}bg-indigo-100 dark:bg-indigo-950 font-semibold{% endif %}">T5</a>
-            <a href="{% url 'view_resume' resume.pk 't6' %}" class="block rounded px-2 py-1 text-sm {% if selected_template == 't6' %}bg-indigo-100 dark:bg-indigo-950 font-semibold{% endif %}">T6</a>
-            <a href="{% url 'view_resume' resume.pk 't7' %}" class="block rounded px-2 py-1 text-sm {% if selected_template == 't7' %}bg-indigo-100 dark:bg-indigo-950 font-semibold{% endif %}">T7</a>
-            <a href="{% url 'view_resume' resume.pk 't8' %}" class="block rounded px-2 py-1 text-sm {% if selected_template == 't8' %}bg-indigo-100 dark:bg-indigo-950 font-semibold{% endif %}">T8</a>
-        </div>
-        {% if resume.is_public %}
-        <div class="card p-4 text-xs break-all">
-            <p>Public link:</p>
-            <a href="{{ share_url }}" class="text-brand-600">{{ share_url }}</a>
-            <img src="{% url 'qr_code' resume.pk %}" class="mt-2 h-20" alt="QR">
-        </div>
-        {% endif %}
-    </aside>
-    <div class="lg:col-span-8">
-        <div class="print-resume-shell card p-4">
-            <div class="print-resume-area mx-auto max-w-[210mm] bg-white p-2 rounded-xl">
-                {% include template_name with accent_color=resume.accent_color font_family=resume.font_family %}
-            </div>
-        </div>
+<div class="mb-6 flex flex-wrap items-center justify-between gap-3 no-print">
+    <div>
+        <h1 class="text-xl font-bold text-slate-900 dark:text-white">{{ resume.resume_name }}</h1>
+        <p class="text-sm text-slate-500"><i class="bi bi-palette2 text-brand-600"></i> {{ template_label }} format</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+        <a href="{% url 'edit_resume' resume.pk %}" class="btn-secondary !py-2 !px-3 text-sm"><i class="bi bi-pencil"></i> Edit</a>
+        <a href="{% url 'download_pdf' resume.pk selected_template %}" class="btn-success !py-2 !px-3 text-sm"><i class="bi bi-download"></i> PDF</a>
+        <button type="button" onclick="window.print()" class="btn-secondary !py-2 !px-3 text-sm"><i class="bi bi-printer"></i> Print</button>
+    </div>
+</div>
+
+<div class="no-print mb-6 flex flex-wrap gap-2">
+    {% for tid, label in template_choices %}
+    <a href="{% url 'view_resume' resume.pk tid %}" class="stat-pill {% if selected_template == tid %}stat-pill-active{% endif %}">{{ label }}</a>
+    {% endfor %}
+</div>
+
+{% if resume.is_public and share_url %}
+<div class="no-print mb-6 card p-4">
+    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Public share link</p>
+    <div class="share-url-box mt-2">
+        <input type="text" readonly value="{{ share_url }}" class="share-url-input" id="share-url-input">
+        <button type="button" class="share-copy-btn" onclick="copyShareLink()" title="Copy link"><i class="bi bi-clipboard"></i></button>
     </div>
 </div>
 {% endif %}
+
+<div class="print-resume-shell">
+    <div class="print-resume-area mx-auto bg-white shadow-sm ring-1 ring-slate-200 dark:ring-slate-700">
+        {% include template_name %}
+    </div>
+</div>
 {% endblock %}

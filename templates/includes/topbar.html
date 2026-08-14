@@ -1,0 +1,35 @@
+<header class="site-header no-print sticky top-0 z-50 w-full">
+    <div class="site-header-inner">
+        <div class="site-header-left">
+            <a href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'home' %}{% endif %}" class="site-brand">
+                <span class="site-brand-icon"><i class="bi bi-file-earmark-person-fill"></i></span>
+                Resume<span class="site-brand-accent">Pro</span>
+            </a>
+        </div>
+
+        <nav class="site-header-nav" aria-label="Account">
+            {% if user.is_authenticated %}
+            <a href="{% url 'profile' %}" class="header-link {% if request.resolver_match.url_name == 'profile' %}header-link-active{% endif %}" title="Profile">
+                <i class="bi bi-person-circle"></i><span>Profile</span>
+            </a>
+            <a href="{% url 'password_change' %}" class="header-link {% if request.resolver_match.url_name == 'password_change' %}header-link-active{% endif %}" title="Password">
+                <i class="bi bi-shield-lock"></i><span>Password</span>
+            </a>
+            <button type="button" onclick="toggleTheme()" class="header-link header-link-btn" aria-label="Toggle theme">
+                <i class="bi bi-sun hidden dark:inline"></i><i class="bi bi-moon dark:hidden"></i><span>Theme</span>
+            </button>
+            <a href="{% url 'logout' %}" class="header-link header-link-logout" title="Logout">
+                <i class="bi bi-box-arrow-right"></i><span>Logout</span>
+            </a>
+            {% else %}
+            <a href="{% url 'login' %}" class="header-link {% if request.resolver_match.url_name == 'login' %}header-link-active{% endif %}">
+                <i class="bi bi-box-arrow-in-right"></i><span>Login</span>
+            </a>
+            <a href="{% url 'signup' %}" class="btn-primary header-signup-btn"><i class="bi bi-person-plus"></i><span>Sign up</span></a>
+            <button type="button" onclick="toggleTheme()" class="header-link header-link-btn" aria-label="Toggle theme">
+                <i class="bi bi-sun hidden dark:inline"></i><i class="bi bi-moon dark:hidden"></i>
+            </button>
+            {% endif %}
+        </nav>
+    </div>
+</header>

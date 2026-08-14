@@ -1,30 +1,42 @@
 {% extends 'base.html' %}
-{% block title %}Template gallery{% endblock %}
+{% block title %}Templates{% endblock %}
+{% block page_heading %}Templates{% endblock %}
 {% block content %}
-<h1 class="font-display text-2xl font-bold text-slate-900 dark:text-white">Choose a template</h1>
-<p class="mt-1 text-slate-600 dark:text-slate-400">Set your default in the editor (accent color + font apply to all templates).</p>
-<div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+<div class="page-header mb-8">
+    <h1 class="text-slate-900 dark:text-white">Choose a template</h1>
+    <p>Five distinct single-page designs — each with its own color palette. Preview matches PDF.</p>
+</div>
+
+{% if not resume %}
+<div class="card mx-auto max-w-md p-10 text-center">
+    <i class="bi bi-layout-text-window-reverse text-4xl text-brand-600"></i>
+    <p class="mt-4 text-slate-600">Create a resume to preview templates.</p>
+    <a href="{% url 'new_resume' %}" class="btn-primary mt-4 inline-flex items-center gap-2"><i class="bi bi-plus-lg"></i> Create resume</a>
+</div>
+{% else %}
+<div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
     {% for tid, name, desc, color in templates %}
-    <article class="card group overflow-hidden transition hover:shadow-md">
-        <div class="relative h-36 overflow-hidden" style="background:linear-gradient(145deg,{{ color }} 0%,#0f172a 120%);">
-            <div class="absolute inset-0 flex flex-col justify-end p-4 text-white">
-                <span class="text-xs font-bold uppercase tracking-widest opacity-80">{{ tid }}</span>
-                <span class="text-lg font-bold">{{ name }}</span>
-            </div>
-            <div class="absolute right-3 top-3 h-12 w-12 rounded-lg bg-white/20 backdrop-blur-sm"></div>
+    <article class="template-card card card-hover {% if current_template == tid %}ring-2 ring-brand-500{% endif %}">
+        <div class="template-preview text-white" style="background: linear-gradient(135deg, {{ color }} 0%, #0f172a 100%);">
+            <p class="text-xs font-bold uppercase tracking-widest opacity-80">{{ tid }}</p>
+            <h2 class="mt-1 text-2xl font-bold">{{ name }}</h2>
+            {% if current_template == tid %}<span class="mt-2 inline-flex items-center gap-1 rounded-full bg-white/20 px-2 py-0.5 text-xs"><i class="bi bi-check-circle-fill"></i> Active</span>{% endif %}
         </div>
-        <div class="p-4">
-            <p class="text-xs text-slate-500 dark:text-slate-400">{{ desc }}</p>
-            {% if resume %}
-            <div class="mt-3 flex gap-2">
-                <a href="{% url 'view_resume' resume.pk tid %}" class="flex-1 rounded-lg bg-brand-600 py-2 text-center text-xs font-semibold text-white hover:bg-brand-700">Preview</a>
-                <a href="{% url 'download_pdf' resume.pk tid %}" class="rounded-lg border border-slate-200 px-2 py-2 text-xs dark:border-slate-600" title="PDF">PDF</a>
+        <div class="p-5">
+            <p class="text-sm text-slate-600 dark:text-slate-400">{{ desc }}</p>
+            {% if tid %}<span class="mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"><i class="bi bi-file-earmark-check"></i> Single page</span>{% endif %}
+            <div class="mt-4 flex flex-wrap gap-2">
+                <a href="{% url 'view_resume' resume.pk tid %}" class="btn-secondary !py-2 !px-3 text-xs"><i class="bi bi-eye"></i> Preview</a>
+                <a href="{% url 'download_pdf' resume.pk tid %}" class="btn-secondary !py-2 !px-3 text-xs"><i class="bi bi-download"></i> PDF</a>
+                {% if current_template != tid %}
+                <form method="post" action="{% url 'apply_template' resume.pk tid %}">{% csrf_token %}
+                    <button type="submit" class="btn-primary !py-2 !px-3 text-xs"><i class="bi bi-check2"></i> Use template</button>
+                </form>
+                {% endif %}
             </div>
-            {% else %}
-            <p class="mt-3 text-xs text-amber-600">Create a resume to preview</p>
-            {% endif %}
         </div>
     </article>
     {% endfor %}
 </div>
+{% endif %}
 {% endblock %}

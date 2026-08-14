@@ -11,9 +11,6 @@
   function applyTheme(theme) {
     root.classList.toggle('dark', theme === 'dark');
     localStorage.setItem(STORAGE_KEY, theme);
-    document.querySelectorAll('[data-theme-icon]').forEach(function (el) {
-      el.classList.toggle('hidden', el.dataset.themeIcon !== theme);
-    });
   }
 
   window.toggleTheme = function () {

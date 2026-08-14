@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
+{% block title %}{{ resume.full_name }} — Resume{% endblock %}
 {% block content %}
-<div class="max-w-[210mm] mx-auto card p-6 bg-white">
-    {% include template_name with accent_color=resume.accent_color font_family=resume.font_family %}
+<div class="mx-auto max-w-[210mm] bg-white shadow-sm ring-1 ring-slate-200">
+    {% include template_name %}
 </div>
 {% endblock %}

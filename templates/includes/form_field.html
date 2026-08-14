@@ -1,0 +1,9 @@
+<div class="{% if wide %}sm:col-span-2{% endif %}{% if inline %} flex items-center gap-2{% endif %}">
+    {% if not inline and not hide_label %}
+    <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-300">{{ field.label }}</label>
+    {% endif %}
+    {{ field }}
+    {% if inline %}<label for="{{ field.id_for_label }}" class="text-sm text-slate-600 dark:text-slate-300">{{ field.label }}</label>{% endif %}
+    {% if field.help_text %}<p class="mt-1 text-xs text-slate-400">{{ field.help_text }}</p>{% endif %}
+    {% if field.errors %}<p class="mt-1 text-xs text-rose-600">{{ field.errors.0 }}</p>{% endif %}
+</div>
