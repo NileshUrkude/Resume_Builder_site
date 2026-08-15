@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -39,6 +39,7 @@ from .utils import (
     TEMPLATE_THEMES,
     _resume_context,
     check_share_password,
+    get_sample_resume,
     get_user_resume,
     normalize_template,
     pdf_response,
@@ -47,6 +48,131 @@ from .utils import (
     set_active_resume,
     set_share_password,
 )
+
+
+class RelatedList:
+    """Minimal related-manager stand-in for draft preview templates."""
+
+    def __init__(self, items):
+        self._items = list(items)
+
+    def all(self):
+        return self._items
+
+
+class DraftResume:
+    """In-memory resume that mirrors attribute access used by resume templates."""
+
+    def __init__(self, base, fields, relations):
+        self.pk = base.pk
+        self.user = base.user
+        self.slug = base.slug
+        self.photo = base.photo
+        self.share_password = base.share_password
+        self.is_public = base.is_public
+        defaults = {
+            'resume_name': base.resume_name,
+            'full_name': base.full_name,
+            'title': base.title,
+            'email': base.email,
+            'phone': base.phone,
+            'summary': base.summary or '',
+            'github': base.github or '',
+            'linkedin': base.linkedin or '',
+            'preferred_template': base.preferred_template,
+            'font_family': base.font_family or 'Arial',
+        }
+        defaults.update(fields or {})
+        for key, value in defaults.items():
+            setattr(self, key, value)
+        for rel_name, items in (relations or {}).items():
+            setattr(self, rel_name, RelatedList(items))
+
+    def duration_display(self, start, end):
+        return Resume.duration_display(self, start, end)
+
+
+_FORMSET_MODELS = {
+    'edu': (Education, 'educations'),
+    'exp': (Experience, 'experiences'),
+    'proj': (Project, 'projects'),
+    'skill': (Skill, 'skills'),
+    'cert': (Certificate, 'certificates'),
+    'ach': (Achievement, 'achievements'),
+    'lang': (Language, 'languages'),
+    'hobby': (Hobby, 'hobbies'),
+}
+
+_RESUME_DRAFT_FIELDS = (
+    'resume_name', 'full_name', 'title', 'email', 'phone', 'summary',
+    'github', 'linkedin', 'preferred_template', 'font_family', 'is_public',
+)
+
+
+def _row_has_data(cleaned):
+    for field, value in cleaned.items():
+        if field in ('DELETE', 'id', 'order'):
+            continue
+        if value not in (None, '', False):
+            return True
+    return False
+
+
+def _draft_field_value(form, resume, name):
+    cleaned = getattr(form, 'cleaned_data', None) or {}
+    if name in cleaned:
+        return cleaned[name]
+    if form.is_bound:
+        raw = form.data.get(name)
+        if raw is not None:
+            if name == 'is_public':
+                return name in form.data
+            return raw
+    return getattr(resume, name)
+
+
+def _objects_from_formset(formset, model, resume):
+    formset.is_valid()
+    items = []
+    for form in formset.forms:
+        cleaned = getattr(form, 'cleaned_data', None) or {}
+        if not cleaned or cleaned.get('DELETE') or not _row_has_data(cleaned):
+            continue
+        kwargs = {}
+        for field in form.fields:
+            if field in ('DELETE', 'id'):
+                continue
+            if field in cleaned:
+                kwargs[field] = cleaned[field]
+        obj = model(**kwargs)
+        # Use the real Resume for FK typing; date helpers only need duration_display.
+        obj.resume = resume
+        items.append(obj)
+    return items
+
+
+def _build_draft_resume(request, resume):
+    form = ResumeForm(request.POST, request.FILES, instance=resume)
+    form.is_valid()
+    fields = {name: _draft_field_value(form, resume, name) for name in _RESUME_DRAFT_FIELDS}
+    fields['preferred_template'] = normalize_template(fields.get('preferred_template') or 't1')
+    fields['summary'] = fields.get('summary') or ''
+    fields['github'] = (fields.get('github') or '').strip()
+    fields['linkedin'] = (fields.get('linkedin') or '').strip()
+    draft = DraftResume(resume, fields, {
+        'educations': [],
+        'experiences': [],
+        'projects': [],
+        'skills': [],
+        'certificates': [],
+        'achievements': [],
+        'languages': [],
+        'hobbies': [],
+    })
+    formsets = _build_formsets(request, resume)
+    for prefix, (model, rel_name) in _FORMSET_MODELS.items():
+        setattr(draft, rel_name, RelatedList(_objects_from_formset(formsets[prefix], model, resume)))
+    return draft
 
 
 def home(request):
@@ -167,10 +293,10 @@ def new_resume(request):
     if request.method == 'POST':
         resume = Resume.objects.create(
             user=request.user,
-            resume_name=request.POST.get('resume_name', 'My Resume'),
-            title='Your Title',
+            resume_name=request.POST.get('resume_name', 'My Resume') or 'My Resume',
+            title='',
             full_name=request.user.get_full_name() or request.user.username,
-            email=request.user.email or 'email@example.com',
+            email=request.user.email or '',
             phone='',
             summary='',
         )
@@ -224,7 +350,7 @@ def create_resume(request, resume_id=None):
             _save_formsets(resume, formsets)
             set_active_resume(request, resume)
             messages.success(request, 'Resume saved.')
-            return redirect('dashboard')
+            return redirect('edit_resume', resume_id=resume.pk)
         messages.error(request, 'Please fix the errors below.')
         resume_form = ResumeForm(request.POST, request.FILES, instance=resume)
     else:
@@ -235,8 +361,10 @@ def create_resume(request, resume_id=None):
     )
 
     preview_url = ''
+    draft_preview_url = ''
     if resume:
         preview_url = reverse('preview_fragment', kwargs={'resume_id': resume.pk, 'template': '__tpl__'})
+        draft_preview_url = reverse('preview_draft', kwargs={'resume_id': resume.pk, 'template': '__tpl__'})
 
     return render(request, 'resumes/form.html', {
         'form': resume_form,
@@ -251,7 +379,13 @@ def create_resume(request, resume_id=None):
         'hobby': formsets['hobby'],
         'preview_template': preview_template,
         'preview_url': preview_url,
+        'draft_preview_url': draft_preview_url,
         'template_choices': list(TEMPLATE_LABELS.items()),
+        'template_themes': TEMPLATE_THEMES,
+        'template_chips': [
+            (tid, TEMPLATE_LABELS[tid], TEMPLATE_THEMES[tid]['primary'])
+            for tid in TEMPLATE_LABELS
+        ],
     })
 
 
@@ -312,9 +446,30 @@ def my_resumes(request):
 @login_required
 @require_GET
 def preview_fragment(request, resume_id, template):
+    template = normalize_template(template)
+    if request.GET.get('sample') == '1':
+        html = render_resume_html(get_sample_resume(), template, for_pdf=True, request=request)
+        return HttpResponse(html)
     resume = get_object_or_404(Resume, pk=resume_id, user=request.user)
-    # Render the PDF-styled HTML so preview matches the downloaded PDF exactly
     html = render_resume_html(resume, template, for_pdf=True, request=request)
+    return HttpResponse(html)
+
+
+@login_required
+@require_GET
+def preview_sample(request, template):
+    template = normalize_template(template)
+    html = render_resume_html(get_sample_resume(), template, for_pdf=True, request=request)
+    return HttpResponse(html)
+
+
+@login_required
+@require_POST
+def preview_draft(request, resume_id, template):
+    resume = get_object_or_404(Resume, pk=resume_id, user=request.user)
+    template = normalize_template(template)
+    draft = _build_draft_resume(request, resume)
+    html = render_resume_html(draft, template, for_pdf=True, request=request)
     return HttpResponse(html)
 
 

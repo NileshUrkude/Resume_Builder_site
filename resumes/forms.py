@@ -15,12 +15,7 @@ from .models import (
     Skill,
 )
 
-INPUT_CLASS = (
-    'mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 '
-    'text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none '
-    'focus:ring-2 focus:ring-indigo-500/20 '
-    'dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100'
-)
+INPUT_CLASS = 'form-input'
 TEXTAREA_CLASS = INPUT_CLASS + ' min-h-[88px]'
 DATE_CLASS = INPUT_CLASS + ' max-w-xs'
 
@@ -36,7 +31,7 @@ class TailwindModelForm(forms.ModelForm):
                 widget.attrs.setdefault('class', DATE_CLASS)
                 widget.input_type = 'date'
             elif isinstance(widget, forms.CheckboxInput):
-                widget.attrs.setdefault('class', 'h-4 w-4 rounded border-slate-300 text-indigo-600')
+                widget.attrs.setdefault('class', 'h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500')
             elif isinstance(widget, (forms.FileInput, forms.Select)):
                 widget.attrs.setdefault('class', INPUT_CLASS)
             else:
@@ -77,20 +72,22 @@ class ResumeForm(TailwindModelForm):
         model = Resume
         fields = [
             'resume_name', 'full_name', 'title', 'email', 'phone', 'summary', 'photo',
-            'github', 'linkedin', 'preferred_template', 'accent_color', 'font_family', 'is_public',
+            'github', 'linkedin', 'preferred_template', 'font_family', 'is_public',
         ]
         widgets = {
             'summary': forms.Textarea(attrs={'rows': 3, 'id': 'id_summary', 'placeholder': 'Brief professional summary'}),
-            'accent_color': forms.TextInput(attrs={'type': 'color'}),
             'photo': forms.ClearableFileInput(attrs={'class': INPUT_CLASS}),
             'is_public': forms.CheckboxInput(),
-            'preferred_template': forms.Select(attrs={'class': INPUT_CLASS}),
+            'preferred_template': forms.Select(attrs={'class': INPUT_CLASS, 'id': 'id_preferred_template'}),
             'github': forms.URLInput(attrs={'placeholder': 'https://github.com/username'}),
             'linkedin': forms.URLInput(attrs={'placeholder': 'https://linkedin.com/in/username'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        for name in ('title', 'phone', 'email', 'full_name'):
+            if name in self.fields:
+                self.fields[name].required = False
         self.fields['preferred_template'].choices = [
             ('t1', 'Executive Navy — gold & navy classic'),
             ('t1s', 'Ocean Teal — mint minimal stack'),

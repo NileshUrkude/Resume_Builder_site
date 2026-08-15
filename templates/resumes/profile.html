@@ -1,51 +1,50 @@
-{% extends 'base.html' %}
-{% block title %}Account{% endblock %}
-{% block page_heading %}Account settings{% endblock %}
-{% block content %}
-<div class="grid gap-6 lg:grid-cols-2">
-    <form method="post" class="card p-6">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="profile">
-        <h2 class="mb-4 flex items-center gap-2 font-semibold text-slate-900 dark:text-white"><i class="bi bi-person-circle text-brand-600"></i> Profile information</h2>
-        {% if profile_form.errors %}
-        <div class="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-200">
-            {% for err in profile_form.non_field_errors %}<p>{{ err }}</p>{% endfor %}
-            {% for field in profile_form %}{% for e in field.errors %}<p>{{ field.label }}: {{ e }}</p>{% endfor %}{% endfor %}
-        </div>
-        {% endif %}
-        <div class="grid gap-3 sm:grid-cols-2">
-            {% for field in profile_form %}
-            {% include 'includes/form_field.html' with field=field %}
-            {% endfor %}
-        </div>
-        <button type="submit" class="btn-primary mt-5 inline-flex items-center gap-2"><i class="bi bi-check2"></i> Save profile</button>
-    </form>
-
-    <form method="post" class="card p-6">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="password">
-        <h2 class="mb-4 flex items-center gap-2 font-semibold text-slate-900 dark:text-white"><i class="bi bi-shield-lock text-brand-600"></i> Change password</h2>
-        <p class="mb-4 text-xs text-slate-500">Or use the <a href="{% url 'password_change' %}" class="font-medium text-brand-600 hover:underline">dedicated password page</a>.</p>
-        {% if password_form.errors %}
-        <div class="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-200">
-            {% for err in password_form.non_field_errors %}<p>{{ err }}</p>{% endfor %}
-            {% for field in password_form %}{% for e in field.errors %}<p>{{ field.label }}: {{ e }}</p>{% endfor %}{% endfor %}
-        </div>
-        {% endif %}
-        <div class="space-y-3">
-            {% for field in password_form %}
-            {% include 'includes/form_field.html' with field=field %}
-            {% endfor %}
-        </div>
-        <button type="submit" class="btn-primary mt-5 inline-flex items-center gap-2"><i class="bi bi-key"></i> Update password</button>
-    </form>
-</div>
-
-<form method="post" class="card mt-6 border-rose-200 p-6 dark:border-rose-900" onsubmit="return confirm('Delete account permanently? This cannot be undone.')">
-    {% csrf_token %}
-    <input type="hidden" name="action" value="delete_account">
-    <h2 class="flex items-center gap-2 font-semibold text-rose-600"><i class="bi bi-exclamation-triangle"></i> Danger zone</h2>
-    <p class="mt-2 text-sm text-slate-500">Permanently delete your account and all resumes.</p>
-    <button type="submit" class="mt-4 rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700">Delete account</button>
-</form>
-{% endblock %}
+{% extends 'base.html' %}
+{% block title %}Account settings{% endblock %}
+{% block content %}
+<div class="grid gap-6 lg:grid-cols-2">
+    <form method="post" class="card p-6">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="profile">
+        <h2 class="mb-4 flex items-center gap-2 font-semibold text-slate-900 dark:text-white"><i class="bi bi-person-circle text-brand-600"></i> Profile information</h2>
+        {% if profile_form.errors %}
+        <div class="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-200">
+            {% for err in profile_form.non_field_errors %}<p>{{ err }}</p>{% endfor %}
+            {% for field in profile_form %}{% for e in field.errors %}<p>{{ field.label }}: {{ e }}</p>{% endfor %}{% endfor %}
+        </div>
+        {% endif %}
+        <div class="grid gap-3 sm:grid-cols-2">
+            {% for field in profile_form %}
+            {% include 'includes/form_field.html' with field=field %}
+            {% endfor %}
+        </div>
+        <button type="submit" class="btn-primary mt-5 inline-flex items-center gap-2"><i class="bi bi-check2"></i> Save profile</button>
+    </form>
+
+    <form method="post" class="card p-6">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="password">
+        <h2 class="mb-4 flex items-center gap-2 font-semibold text-slate-900 dark:text-white"><i class="bi bi-shield-lock text-brand-600"></i> Change password</h2>
+        <p class="mb-4 text-xs text-slate-500">Or use the <a href="{% url 'password_change' %}" class="font-medium text-brand-600 hover:underline">dedicated password page</a>.</p>
+        {% if password_form.errors %}
+        <div class="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-200">
+            {% for err in password_form.non_field_errors %}<p>{{ err }}</p>{% endfor %}
+            {% for field in password_form %}{% for e in field.errors %}<p>{{ field.label }}: {{ e }}</p>{% endfor %}{% endfor %}
+        </div>
+        {% endif %}
+        <div class="space-y-3">
+            {% for field in password_form %}
+            {% include 'includes/form_field.html' with field=field %}
+            {% endfor %}
+        </div>
+        <button type="submit" class="btn-primary mt-5 inline-flex items-center gap-2"><i class="bi bi-key"></i> Update password</button>
+    </form>
+</div>
+
+<form method="post" class="card mt-6 border-rose-200 p-6 dark:border-rose-900" onsubmit="return confirm('Delete account permanently? This cannot be undone.')">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="delete_account">
+    <h2 class="flex items-center gap-2 font-semibold text-rose-600"><i class="bi bi-exclamation-triangle"></i> Danger zone</h2>
+    <p class="mt-2 text-sm text-slate-500">Permanently delete your account and all resumes.</p>
+    <button type="submit" class="mt-4 rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700">Delete account</button>
+</form>
+{% endblock %}

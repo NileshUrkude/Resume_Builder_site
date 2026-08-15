@@ -1,6 +1,5 @@
 {% extends 'base.html' %}
 {% block title %}Preview — {{ template_label }}{% endblock %}
-{% block page_heading %}Resume preview{% endblock %}
 {% block content %}
 <div class="mb-6 flex flex-wrap items-center justify-between gap-3 no-print">
     <div>
@@ -9,7 +8,7 @@
     </div>
     <div class="flex flex-wrap gap-2">
         <a href="{% url 'edit_resume' resume.pk %}" class="btn-secondary !py-2 !px-3 text-sm"><i class="bi bi-pencil"></i> Edit</a>
-        <a href="{% url 'download_pdf' resume.pk selected_template %}" class="btn-success !py-2 !px-3 text-sm"><i class="bi bi-download"></i> PDF</a>
+        <a href="{% url 'download_pdf' resume.pk selected_template %}" data-busy-download class="btn-success !py-2 !px-3 text-sm"><i class="bi bi-download" aria-hidden="true"></i> PDF</a>
         <button type="button" onclick="window.print()" class="btn-secondary !py-2 !px-3 text-sm"><i class="bi bi-printer"></i> Print</button>
     </div>
 </div>
@@ -25,7 +24,7 @@
     <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Public share link</p>
     <div class="share-url-box mt-2">
         <input type="text" readonly value="{{ share_url }}" class="share-url-input" id="share-url-input">
-        <button type="button" class="share-copy-btn" onclick="copyShareLink()" title="Copy link"><i class="bi bi-clipboard"></i></button>
+        <button type="button" class="share-copy-btn" onclick="copyShareLink()" title="Copy link" aria-label="Copy share link"><i class="bi bi-clipboard" aria-hidden="true"></i></button>
     </div>
 </div>
 {% endif %}

@@ -1,96 +1,163 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block title %}Edit resume{% endblock %}
-{% block page_heading %}Edit resume{% endblock %}
 {% block content %}
-<div class="mb-6 flex items-center justify-between gap-4">
-    <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"><i class="bi bi-arrow-left"></i> Dashboard</a>
-    {% if resume %}
-    <a href="{% url 'download_pdf' resume.pk preview_template %}" class="no-print inline-flex items-center gap-1 text-sm font-medium text-emerald-600 hover:text-emerald-700"><i class="bi bi-download"></i> PDF</a>
-    {% endif %}
-</div>
-
-{% if form.errors or edu.errors or exp.errors or proj.errors or skill.errors or cert.errors or ach.errors or lang.errors or hobby.errors %}
-<div class="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-200">
-    <p class="font-semibold"><i class="bi bi-exclamation-triangle"></i> Could not save — please fix the errors below.</p>
-</div>
-{% endif %}
-
-<form method="post" enctype="multipart/form-data" id="resume-form" action="{% if resume %}{% url 'edit_resume' resume.pk %}{% else %}{% url 'create_resume' %}{% endif %}" class="grid gap-8 xl:grid-cols-2">
-    {% csrf_token %}
-
-    <div class="space-y-5" id="form-sections">
-        <section class="card p-5">
-            <h2 class="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white"><i class="bi bi-person text-brand-600"></i> Personal info</h2>
-            <div class="grid gap-3 sm:grid-cols-2">
-                {% for field in form %}
-                {% if field.name == 'resume_name' or field.name == 'full_name' or field.name == 'title' or field.name == 'email' or field.name == 'phone' or field.name == 'summary' or field.name == 'photo' %}
-                {% if field.name == 'summary' or field.name == 'photo' %}
-                {% include 'includes/form_field.html' with field=field wide=True %}
-                {% else %}
-                {% include 'includes/form_field.html' with field=field %}
-                {% endif %}
-                {% endif %}
-                {% endfor %}
-            </div>
-        </section>
-
-        <section class="card p-5">
-            <h2 class="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white"><i class="bi bi-palette text-brand-600"></i> Links &amp; style</h2>
-            <div class="grid gap-3 sm:grid-cols-2">
-                {% for field in form %}
-                {% if field.name == 'github' or field.name == 'linkedin' or field.name == 'preferred_template' or field.name == 'accent_color' or field.name == 'font_family' %}
-                {% include 'includes/form_field.html' with field=field %}
-                {% elif field.name == 'is_public' %}
-                {% include 'includes/form_field.html' with field=field wide=True inline=True %}
-                {% elif field.name == 'share_password_input' %}
-                <div class="sm:col-span-2" id="share-password-field">
-                    {% include 'includes/form_field.html' with field=field wide=True %}
-                </div>
-                {% endif %}
-                {% endfor %}
-            </div>
-        </section>
-
-        {% include 'resumes/includes/form_section.html' with title='Experience' prefix='exp' formset=exp %}
-        {% include 'resumes/includes/form_section.html' with title='Education' prefix='edu' formset=edu %}
-        {% include 'resumes/includes/form_section.html' with title='Projects' prefix='proj' formset=proj %}
-        {% include 'resumes/includes/form_section.html' with title='Skills' prefix='skill' formset=skill %}
-        {% include 'resumes/includes/form_section.html' with title='Certifications' prefix='cert' formset=cert %}
-        {% include 'resumes/includes/form_section.html' with title='Achievements' prefix='ach' formset=ach %}
-        {% include 'resumes/includes/form_section.html' with title='Languages' prefix='lang' formset=lang %}
-        {% include 'resumes/includes/form_section.html' with title='Interests' prefix='hobby' formset=hobby %}
-
-        <button type="submit" class="btn-primary inline-flex w-full items-center justify-center gap-2 py-3"><i class="bi bi-check2-circle"></i> Save &amp; preview</button>
-    </div>
-
-    <div class="no-print xl:sticky xl:self-start" id="preview-panel">
-        <div class="preview-frame">
-            <div class="preview-frame-header flex items-center justify-between">
-                <h2 class="text-sm font-semibold text-slate-800 dark:text-white"><i class="bi bi-eye"></i> Preview</h2>
-                <select id="preview-template" class="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-800">
-                    {% for val, label in template_choices %}
-                    <option value="{{ val }}" {% if val == preview_template %}selected{% endif %}>{{ label }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div id="live-preview" class="print-resume-area max-h-[75vh] overflow-auto bg-white">
-                {% if not resume %}<p class="p-6 text-sm text-slate-400"><i class="bi bi-info-circle"></i> Save once to see preview.</p>{% endif %}
-            </div>
+<div
+    class="resume-editor"
+    x-data="resumeEditor({
+        resumeId: {% if resume %}{{ resume.pk }}{% else %}null{% endif %},
+        draftUrlTemplate: {% if draft_preview_url %}'{{ draft_preview_url|escapejs }}'{% else %}null{% endif %},
+        savedUrlTemplate: {% if preview_url %}'{{ preview_url|escapejs }}'{% else %}null{% endif %},
+        initialTemplate: '{{ preview_template|escapejs }}'
+    })"
+    @keydown.escape.window="sheetOpen && closeSheet()"
+>
+    <div id="preview-htmx-sink" class="hidden" aria-hidden="true"></div>
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+            <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"><i class="bi bi-arrow-left" aria-hidden="true"></i> Dashboard</a>
+            <h1 class="mt-1 text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">{% if resume %}{{ resume.resume_name }}{% else %}Edit resume{% endif %}</h1>
+            <p class="text-sm text-slate-500">Edit sections below — preview updates as you type.</p>
         </div>
-        <p class="mt-2 text-xs text-slate-400"><i class="bi bi-shield-check"></i> Preview matches your downloaded PDF.</p>
+        {% if resume %}
+        <a href="{% url 'download_pdf' resume.pk preview_template %}" data-busy-download class="btn-success !py-2 !px-3 text-sm no-print" id="editor-pdf-link"><i class="bi bi-download" aria-hidden="true"></i> PDF</a>
+        {% endif %}
     </div>
-</form>
 
-<button type="button" id="mobile-preview-toggle" class="preview-fab no-print xl:hidden" aria-label="Toggle preview">
-    <i class="bi bi-eye"></i>
-</button>
+    {% if form.errors or edu.errors or exp.errors or proj.errors or skill.errors or cert.errors or ach.errors or lang.errors or hobby.errors %}
+    <div class="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-200" role="alert">
+        <p class="font-semibold"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Could not save — please fix the errors below.</p>
+    </div>
+    {% endif %}
+
+    <nav class="section-jump-nav no-print xl:top-[76px]" aria-label="Form sections">
+        <template x-for="sec in sections" :key="sec.id">
+            <a :href="'#' + sec.id" class="section-jump-link" :class="activeSection === sec.id && 'section-jump-link-active'" @click.prevent="scrollToSection(sec.id)" x-text="sec.label"></a>
+        </template>
+    </nav>
+
+    <form method="post" enctype="multipart/form-data" id="resume-form" action="{% if resume %}{% url 'edit_resume' resume.pk %}{% else %}{% url 'create_resume' %}{% endif %}" class="grid gap-8 xl:grid-cols-2" @input.debounce.400ms="queuePreview()" @change="queuePreview()">
+        {% csrf_token %}
+
+        <div class="space-y-5" id="form-sections">
+            <section class="card p-5" id="section-personal" data-editor-section>
+                <h2 class="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white"><i class="bi bi-person text-brand-600" aria-hidden="true"></i> Personal info</h2>
+                <div class="grid gap-3 sm:grid-cols-2">
+                    {% for field in form %}
+                    {% if field.name == 'resume_name' or field.name == 'full_name' or field.name == 'title' or field.name == 'email' or field.name == 'phone' or field.name == 'summary' or field.name == 'photo' %}
+                    {% if field.name == 'summary' or field.name == 'photo' %}
+                    {% include 'includes/form_field.html' with field=field wide=True %}
+                    {% else %}
+                    {% include 'includes/form_field.html' with field=field %}
+                    {% endif %}
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="card p-5" id="section-links" data-editor-section>
+                <h2 class="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white"><i class="bi bi-palette text-brand-600" aria-hidden="true"></i> Links &amp; style</h2>
+                <div class="grid gap-3 sm:grid-cols-2">
+                    {% for field in form %}
+                    {% if field.name == 'github' or field.name == 'linkedin' or field.name == 'preferred_template' or field.name == 'font_family' %}
+                    {% include 'includes/form_field.html' with field=field %}
+                    {% elif field.name == 'is_public' %}
+                    {% include 'includes/form_field.html' with field=field wide=True inline=True %}
+                    {% elif field.name == 'share_password_input' %}
+                    <div class="sm:col-span-2" id="share-password-field">
+                        {% include 'includes/form_field.html' with field=field wide=True %}
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </section>
+
+            {% include 'resumes/includes/form_section.html' with title='Experience' prefix='exp' formset=exp section_id='section-experience' %}
+            {% include 'resumes/includes/form_section.html' with title='Education' prefix='edu' formset=edu section_id='section-education' %}
+            {% include 'resumes/includes/form_section.html' with title='Projects' prefix='proj' formset=proj section_id='section-projects' %}
+            {% include 'resumes/includes/form_section.html' with title='Skills' prefix='skill' formset=skill section_id='section-skills' %}
+            {% include 'resumes/includes/form_section.html' with title='Certifications' prefix='cert' formset=cert section_id='section-certs' %}
+            {% include 'resumes/includes/form_section.html' with title='Achievements' prefix='ach' formset=ach section_id='section-achievements' %}
+            {% include 'resumes/includes/form_section.html' with title='Languages' prefix='lang' formset=lang section_id='section-languages' %}
+            {% include 'resumes/includes/form_section.html' with title='Interests' prefix='hobby' formset=hobby section_id='section-interests' %}
+
+            <button type="submit" data-busy-submit class="btn-primary inline-flex w-full items-center justify-center gap-2 py-3"><i class="bi bi-check2-circle" aria-hidden="true"></i> Save</button>
+        </div>
+
+        <div class="no-print hidden xl:block" id="preview-panel">
+            <div class="preview-frame">
+                <div class="preview-frame-header space-y-2">
+                    <div class="flex items-center justify-between gap-2">
+                        <h2 class="text-sm font-semibold text-slate-800 dark:text-white"><i class="bi bi-eye" aria-hidden="true"></i> Preview</h2>
+                        <span class="text-[10px] font-medium uppercase tracking-wide text-slate-400" x-show="previewLoading" x-cloak>Updating…</span>
+                    </div>
+                    <div class="template-chip-strip" role="listbox" aria-label="Resume templates">
+                        {% for val, label, color in template_chips %}
+                        <button
+                            type="button"
+                            role="option"
+                            class="template-chip"
+                            :class="template === '{{ val }}' && 'template-chip-active'"
+                            :aria-selected="(template === '{{ val }}').toString()"
+                            @click="selectTemplate('{{ val }}')"
+                            title="{{ label }}"
+                        >
+                            <span class="template-chip-swatch" style="background: {{ color }}"></span>
+                            <span class="template-chip-label">{{ label }}</span>
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div id="live-preview" class="preview-scale-wrap print-resume-area" x-ref="previewBox">
+                    <div class="preview-skeleton" x-show="previewLoading && !hasPreview" x-cloak>
+                        <div class="preview-skeleton-line w-2/3"></div>
+                        <div class="preview-skeleton-line w-full"></div>
+                        <div class="preview-skeleton-line w-5/6"></div>
+                        <div class="preview-skeleton-line w-4/5"></div>
+                    </div>
+                    {% if not resume %}
+                    <p class="p-6 text-sm text-slate-400"><i class="bi bi-info-circle" aria-hidden="true"></i> Create and save a resume to enable live preview.</p>
+                    {% endif %}
+                </div>
+            </div>
+            <p class="mt-2 text-xs text-slate-400"><i class="bi bi-shield-check" aria-hidden="true"></i> Preview matches your downloaded PDF. Template choice saves with the form.</p>
+        </div>
+    </form>
+
+    <button type="button" id="mobile-preview-toggle" class="preview-fab no-print xl:hidden" aria-label="Open preview" :aria-expanded="sheetOpen.toString()" @click="openSheet()">
+        <i class="bi bi-eye" aria-hidden="true"></i>
+    </button>
+
+    <div
+        class="preview-sheet no-print xl:hidden"
+        x-show="sheetOpen"
+        x-cloak
+        x-transition.opacity
+        x-ref="previewSheet"
+        @click.self="closeSheet()"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Resume preview"
+    >
+        <div class="preview-sheet-panel" @click.stop>
+            <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+                <h2 class="text-sm font-semibold text-slate-900 dark:text-white" id="preview-sheet-title">Preview</h2>
+                <div class="flex items-center gap-2">
+                    <select x-model="template" @change="onTemplateChange()" class="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-800" aria-label="Preview template">
+                        {% for val, label in template_choices %}
+                        <option value="{{ val }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" class="btn-secondary !px-3 !py-1.5 text-xs" x-ref="sheetCloseBtn" @click="closeSheet()" aria-label="Close preview">Close</button>
+                </div>
+            </div>
+            <div class="preview-scale-wrap flex-1" style="max-height: calc(92vh - 56px);" x-ref="sheetPreviewBox"></div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
-<script>
-window.RESUME_ID = {% if resume %}{{ resume.pk }}{% else %}null{% endif %};
-window.PREVIEW_URL_TEMPLATE = {% if preview_url %}"{{ preview_url }}"{% else %}null{% endif %};
-</script>
+<script src="{% static 'vendor/sortable.min.js' %}"></script>
 <script src="{% static 'js/resume-form.js' %}"></script>
 {% endblock %}

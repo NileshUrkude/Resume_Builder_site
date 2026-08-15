@@ -43,7 +43,6 @@ class Resume(models.Model):
 
     photo = models.ImageField(upload_to='photos/', blank=True, null=True)
     preferred_template = models.CharField(max_length=3, choices=TEMPLATE_CHOICES, default='t1')
-    accent_color = models.CharField(max_length=7, default='#4f46e5')
     font_family = models.CharField(max_length=50, choices=FONT_CHOICES, default='Arial')
 
     title = models.CharField(max_length=100)
