@@ -20,31 +20,16 @@ A Django web app to create, preview, and download professional resumes in multip
 
 ## Setup and run
 
-```powershell
-# 1. Go to project folder
-cd d:\notes\Resume_Builder
+Full local instructions: **[LOCAL_SETUP.md](LOCAL_SETUP.md)**  
+Free deploy on Render: **[RENDER_DEPLOY.md](RENDER_DEPLOY.md)**
 
-# 2. Python virtual environment
-python -m venv venv
-.\venv\Scripts\activate
+```bash
+# Quick local start (macOS/Linux)
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
-
-# 3. Build Tailwind CSS (required before first run)
-# Option A — with Node.js:
-npm install
-npm run build:css
-
-# Option B — without npm (Windows standalone CLI):
-# Invoke-WebRequest -Uri "https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.17/tailwindcss-windows-x64.exe" -OutFile tailwindcss.exe
-# .\tailwindcss.exe -i ./static/src/input.css -o ./static/css/tailwind.css --minify
-
-# 4. Database
+npm install && npm run build:css
 python manage.py migrate
-
-# 5. (Optional) Admin user
-python manage.py createsuperuser
-
-# 6. Run server
 python manage.py runserver
 ```
 
