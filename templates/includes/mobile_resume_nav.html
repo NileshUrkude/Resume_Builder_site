@@ -5,7 +5,7 @@
     <a href="{% url 'my_resumes' %}" class="mobile-nav-link {% if request.resolver_match.url_name == 'my_resumes' %}mobile-nav-link-active{% endif %}"><i class="bi bi-collection"></i> Resumes</a>
     {% if active_resume %}
     <a href="{% url 'view_resume' active_resume.pk active_template %}" class="mobile-nav-link {% if request.resolver_match.url_name == 'view_resume' %}mobile-nav-link-active{% endif %}"><i class="bi bi-eye"></i> Preview</a>
-    <a href="{% url 'download_pdf' active_resume.pk active_template %}" data-busy-download class="mobile-nav-link"><i class="bi bi-download" aria-hidden="true"></i> PDF</a>
+    <a href="{% url 'download_pdf' active_resume.pk active_template %}" class="mobile-nav-link"><i class="bi bi-download"></i> PDF</a>
     {% endif %}
     <a href="{% url 'new_resume' %}" class="mobile-nav-link {% if request.resolver_match.url_name == 'new_resume' %}mobile-nav-link-active{% endif %}"><i class="bi bi-plus-circle"></i> New</a>
 </nav>

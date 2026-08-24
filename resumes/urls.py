@@ -17,8 +17,6 @@ urlpatterns = [
     path('create/', views.create_resume, name='create_resume'),
 
     path('resume/<int:resume_id>/preview/<str:template>/', views.preview_fragment, name='preview_fragment'),
-    path('preview/sample/<str:template>/', views.preview_sample, name='preview_sample'),
-    path('resume/<int:resume_id>/preview-draft/<str:template>/', views.preview_draft, name='preview_draft'),
     path('resume/<int:resume_id>/view/<str:template>/', views.view_resume, name='view_resume'),
     path('resume/<int:resume_id>/download/<str:template>/', views.download_pdf, name='download_pdf'),
 

@@ -15,8 +15,8 @@
             <a href="{% url 'password_change' %}" class="header-link {% if request.resolver_match.url_name == 'password_change' %}header-link-active{% endif %}" title="Password">
                 <i class="bi bi-shield-lock"></i><span>Password</span>
             </a>
-            <button type="button" onclick="toggleTheme()" data-theme-toggle class="header-link header-link-btn" aria-label="Toggle theme" aria-pressed="false">
-                <i class="bi bi-sun hidden dark:inline" aria-hidden="true"></i><i class="bi bi-moon dark:hidden" aria-hidden="true"></i><span>Theme</span>
+            <button type="button" onclick="toggleTheme()" class="header-link header-link-btn" aria-label="Toggle theme">
+                <i class="bi bi-sun hidden dark:inline"></i><i class="bi bi-moon dark:hidden"></i><span>Theme</span>
             </button>
             <a href="{% url 'logout' %}" class="header-link header-link-logout" title="Logout">
                 <i class="bi bi-box-arrow-right"></i><span>Logout</span>
@@ -26,8 +26,8 @@
                 <i class="bi bi-box-arrow-in-right"></i><span>Login</span>
             </a>
             <a href="{% url 'signup' %}" class="btn-primary header-signup-btn"><i class="bi bi-person-plus"></i><span>Sign up</span></a>
-            <button type="button" onclick="toggleTheme()" data-theme-toggle class="header-link header-link-btn" aria-label="Toggle theme" aria-pressed="false">
-                <i class="bi bi-sun hidden dark:inline" aria-hidden="true"></i><i class="bi bi-moon dark:hidden" aria-hidden="true"></i>
+            <button type="button" onclick="toggleTheme()" class="header-link header-link-btn" aria-label="Toggle theme">
+                <i class="bi bi-sun hidden dark:inline"></i><i class="bi bi-moon dark:hidden"></i>
             </button>
             {% endif %}
         </nav>

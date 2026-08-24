@@ -16,7 +16,7 @@
                 <li><a href="{% url 'template_gallery' %}" class="sidebar-link {% if request.resolver_match.url_name == 'template_gallery' %}sidebar-link-active{% endif %}"><i class="bi bi-layout-text-window-reverse"></i> Templates</a></li>
                 {% if active_resume %}
                 <li><a href="{% url 'view_resume' active_resume.pk active_template %}" class="sidebar-link {% if request.resolver_match.url_name == 'view_resume' %}sidebar-link-active{% endif %}"><i class="bi bi-eye"></i> Preview</a></li>
-                <li><a href="{% url 'download_pdf' active_resume.pk active_template %}" data-busy-download class="sidebar-link"><i class="bi bi-download" aria-hidden="true"></i> Download PDF</a></li>
+                <li><a href="{% url 'download_pdf' active_resume.pk active_template %}" class="sidebar-link"><i class="bi bi-download"></i> Download PDF</a></li>
                 {% endif %}
             </ul>
         </div>
