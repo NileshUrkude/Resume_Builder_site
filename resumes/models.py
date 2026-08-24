@@ -4,13 +4,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
 
-TEMPLATE_CHOICES = [
-    ('t1', 'Executive Navy'),
-    ('t1s', 'Ocean Teal'),
-    ('t2s', 'Plum Sidebar'),
-    ('t3s', 'Crimson Pro'),
-    ('t4s', 'Slate & Sky'),
-]
+from .template_registry import TEMPLATE_CHOICES
 
 FONT_CHOICES = [
     ('Arial', 'Arial'),

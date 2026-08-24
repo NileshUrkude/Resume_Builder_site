@@ -33,10 +33,8 @@ from .models import (
     Resume,
     Skill,
 )
+from .template_registry import TEMPLATE_BLURBS, TEMPLATE_LABELS, TEMPLATE_MAP, TEMPLATE_THEMES
 from .utils import (
-    TEMPLATE_LABELS,
-    TEMPLATE_MAP,
-    TEMPLATE_THEMES,
     _resume_context,
     check_share_password,
     get_user_resume,
@@ -108,17 +106,6 @@ def _save_formsets(resume, formsets):
     save_ordered_formset(formsets['ach'], resume, 'achievements', 'ach')
     save_ordered_formset(formsets['lang'], resume, 'languages', 'lang')
     save_ordered_formset(formsets['hobby'], resume, 'hobbies', 'hobby')
-
-
-def _gallery_blurb(tid):
-    blurbs = {
-        't1': 'Navy & gold executive style — centered header, classic rules.',
-        't1s': 'Teal minimal stack — clean sections with mint accents.',
-        't2s': 'Purple sidebar — contact & skills on a colored panel.',
-        't3s': 'Crimson timeline — red stripe with dense two columns.',
-        't4s': 'Dark slate header — sky-blue highlights, modern grid.',
-    }
-    return blurbs.get(tid, 'Single-page professional layout.')
 
 
 def _safe_redirect(request, next_url, fallback='dashboard'):
@@ -259,8 +246,8 @@ def create_resume(request, resume_id=None):
 def template_gallery(request):
     resume = get_user_resume(request)
     templates = [
-        (tid, TEMPLATE_LABELS[tid], _gallery_blurb(tid), TEMPLATE_THEMES[tid]['primary'])
-        for tid in ('t1', 't1s', 't2s', 't3s', 't4s')
+        (tid, TEMPLATE_LABELS[tid], TEMPLATE_BLURBS[tid], TEMPLATE_THEMES[tid]['primary'])
+        for tid in TEMPLATE_MAP
     ]
     current = normalize_template(resume.preferred_template) if resume else 't1'
     return render(request, 'resumes/template_gallery.html', {

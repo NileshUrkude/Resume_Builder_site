@@ -1,6 +1,7 @@
 from django.contrib.auth.hashers import check_password, make_password
 from django.http import HttpResponse
 from django.template.loader import render_to_string
+
 try:
     from playwright.sync_api import sync_playwright
     _HAS_PLAYWRIGHT = True
@@ -16,84 +17,29 @@ except Exception:
 from xhtml2pdf import pisa
 
 from .models import Resume
+from .template_registry import (
+    SINGLE_PAGE_TEMPLATES,
+    TEMPLATE_LABELS,
+    TEMPLATE_MAP,
+    TEMPLATE_THEMES,
+    VALID_TEMPLATES,
+)
 
-TEMPLATE_MAP = {
-    't1': 'resumes/t1.html',
-    't1s': 'resumes/t1s.html',
-    't2s': 'resumes/t2s.html',
-    't3s': 'resumes/t3s.html',
-    't4s': 'resumes/t4s.html',
-}
-
-VALID_TEMPLATES = frozenset(TEMPLATE_MAP.keys())
-
-SINGLE_PAGE_TEMPLATES = frozenset({'t1', 't1s', 't2s', 't3s', 't4s'})
-
-TEMPLATE_LABELS = {
-    't1': 'Executive Navy',
-    't1s': 'Ocean Teal',
-    't2s': 'Plum Sidebar',
-    't3s': 'Crimson Pro',
-    't4s': 'Slate & Sky',
-}
-
-# Fixed palette per template — each design looks distinct regardless of user accent pick.
-TEMPLATE_THEMES = {
-    't1': {
-        'primary': '#1e3a5f',
-        'accent': '#c9a227',
-        'text': '#1e293b',
-        'muted': '#64748b',
-        'light': '#faf8f5',
-        'pill_bg': '#eef2f7',
-        'pill_border': '#cbd5e1',
-        'header_bg': '#1e3a5f',
-        'header_text': '#ffffff',
-    },
-    't1s': {
-        'primary': '#0f766e',
-        'accent': '#14b8a6',
-        'text': '#134e4a',
-        'muted': '#5eead4',
-        'light': '#f0fdfa',
-        'pill_bg': '#ccfbf1',
-        'pill_border': '#99f6e4',
-        'header_bg': '#0f766e',
-        'header_text': '#ffffff',
-    },
-    't2s': {
-        'primary': '#5b21b6',
-        'accent': '#a78bfa',
-        'text': '#1e1b4b',
-        'muted': '#6b7280',
-        'light': '#faf5ff',
-        'pill_bg': '#ede9fe',
-        'pill_border': '#c4b5fd',
-        'sidebar_bg': '#4c1d95',
-        'sidebar_text': '#f5f3ff',
-    },
-    't3s': {
-        'primary': '#b91c1c',
-        'accent': '#ef4444',
-        'text': '#1f2937',
-        'muted': '#6b7280',
-        'light': '#fef2f2',
-        'pill_bg': '#fee2e2',
-        'pill_border': '#fecaca',
-        'stripe': '#dc2626',
-    },
-    't4s': {
-        'primary': '#0f172a',
-        'accent': '#0ea5e9',
-        'text': '#334155',
-        'muted': '#64748b',
-        'light': '#f0f9ff',
-        'pill_bg': '#e0f2fe',
-        'pill_border': '#7dd3fc',
-        'header_bg': '#0f172a',
-        'header_text': '#ffffff',
-    },
-}
+__all__ = [
+    'TEMPLATE_LABELS',
+    'TEMPLATE_MAP',
+    'TEMPLATE_THEMES',
+    'VALID_TEMPLATES',
+    'normalize_template',
+    'is_single_page',
+    'render_resume_html',
+    'pdf_response',
+    'get_user_resume',
+    'set_active_resume',
+    'set_share_password',
+    'check_share_password',
+    'save_ordered_formset',
+]
 
 
 def normalize_template(template):
@@ -132,32 +78,34 @@ def render_resume_html(resume, template, for_pdf=False, request=None):
 
 def pdf_response(resume, template, filename='resume.pdf', request=None):
     html = render_resume_html(resume, template, for_pdf=True, request=request)
-    # Prefer Playwright (Chromium) for pixel-perfect browser rendering
     if _HAS_PLAYWRIGHT:
         base_url = request.build_absolute_uri('/') if request else None
         with sync_playwright() as p:
             browser = p.chromium.launch()
             page = browser.new_page()
-            # Use base URL so relative asset URLs resolve
             if base_url:
                 page.set_content(html, wait_until='networkidle', base_url=base_url)
             else:
                 page.set_content(html, wait_until='networkidle')
-            pdf_bytes = page.pdf(format='A4', margin={'top':'10mm','bottom':'10mm','left':'10mm','right':'10mm'}, print_background=True)
+            pdf_bytes = page.pdf(
+                format='A4',
+                margin={'top': '8mm', 'bottom': '8mm', 'left': '8mm', 'right': '8mm'},
+                print_background=True,
+            )
             browser.close()
         response = HttpResponse(pdf_bytes, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
 
-    # Next prefer WeasyPrint
     if _HAS_WEASY:
         base_url = request.build_absolute_uri('/') if request else None
-        pdf_bytes = HTML(string=html, base_url=base_url).write_pdf(stylesheets=[CSS(string='@page { size: A4; margin: 10mm }')])
+        pdf_bytes = HTML(string=html, base_url=base_url).write_pdf(
+            stylesheets=[CSS(string='@page { size: A4; margin: 8mm }')],
+        )
         response = HttpResponse(pdf_bytes, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
 
-    # Fallback to xhtml2pdf
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     pisa.CreatePDF(src=html, dest=response, encoding='utf-8')

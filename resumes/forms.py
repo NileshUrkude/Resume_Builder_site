@@ -14,6 +14,7 @@ from .models import (
     Resume,
     Skill,
 )
+from .template_registry import TEMPLATE_FORM_LABELS, TEMPLATE_MAP
 
 INPUT_CLASS = (
     'mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 '
@@ -92,11 +93,7 @@ class ResumeForm(TailwindModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['preferred_template'].choices = [
-            ('t1', 'Executive Navy — gold & navy classic'),
-            ('t1s', 'Ocean Teal — mint minimal stack'),
-            ('t2s', 'Plum Sidebar — purple panel layout'),
-            ('t3s', 'Crimson Pro — red timeline columns'),
-            ('t4s', 'Slate & Sky — dark header modern'),
+            (tid, TEMPLATE_FORM_LABELS[tid]) for tid in TEMPLATE_MAP
         ]
         if self.instance and self.instance.pk and self.instance.share_password:
             self.fields['share_password_input'].help_text = 'Password is set. Enter a new one to change, or leave blank to keep it.'
