@@ -50,6 +50,28 @@ python manage.py runserver
 
 Open: **http://127.0.0.1:8000/**
 
+## Deploy to Render
+
+This repository includes `render.yaml` for a Render web service named
+`my_resume_builder` and a managed PostgreSQL database. From the Render
+dashboard:
+
+1. Push the project to GitHub or GitLab.
+2. Select **New +** -> **Blueprint** and connect the repository.
+3. Confirm the blueprint name `my_resume_builder`, then apply it.
+4. After the first deploy, open **Environment** and set
+  `CSRF_TRUSTED_ORIGINS` to the exact public URL, such as
+  `https://my-resume-builder.onrender.com`.
+5. Create an admin account from **Shell** with
+  `python manage.py createsuperuser`.
+
+The blueprint installs the Linux runtime dependencies from
+`requirements-render.txt`, builds Tailwind CSS, collects static files, runs
+migrations, and starts Gunicorn. `DATABASE_URL` and
+`DJANGO_SECRET_KEY` are generated/configured by Render. Uploaded media files
+are stored on the web service filesystem; configure a persistent disk or
+object storage before relying on uploads in production.
+
 ### After editing HTML/CSS classes
 
 ```powershell

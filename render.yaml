@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: my_resume_builder
+    runtime: python
+    buildCommand: pip install -r requirements-render.txt && npm install && npm run build:css && python manage.py collectstatic --no-input && python manage.py migrate
+    startCommand: gunicorn Resume_Builder.wsgi:application
+    healthCheckPath: /health/
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: my_resume_builder_db
+          property: connectionString
+      - key: CSRF_TRUSTED_ORIGINS
+        value: https://my-resume-builder.onrender.com
+
+databases:
+  - name: my_resume_builder_db

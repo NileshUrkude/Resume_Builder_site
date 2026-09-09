@@ -53,6 +53,11 @@ def home(request):
     return render(request, 'resumes/home.html')
 
 
+@require_GET
+def health(request):
+    return HttpResponse('ok')
+
+
 def signup(request):
     if request.user.is_authenticated:
         return redirect('dashboard')

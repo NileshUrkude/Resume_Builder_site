@@ -29,6 +29,7 @@ decorator==5.1.1
 defusedxml==0.7.1
 distlib==0.3.9
 Django==5.2
+dj-database-url==2.3.0
 django-cors-headers==4.9.0
 django-filter==26.1
 django-redis==7.0.0
